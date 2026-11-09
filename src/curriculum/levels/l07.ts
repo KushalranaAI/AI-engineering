@@ -81,6 +81,7 @@ export const L7: Level = {
       title: "Evaluating models on your task",
       sessions: 1,
       topics: [
+        { title: "Custom evals vs benchmarks", detail: "Explain what a public benchmark can and cannot tell you, and why a small eval built from your own traffic usually predicts your results better." },
         { title: "Your task, not theirs", detail: "Test candidate models on the job your app actually does." },
         { title: "Making a shortlist", detail: "Use leaderboards and aggregators to filter by capability, latency, context length and price." },
         { title: "A task dataset", detail: "Build a custom eval set for a real task such as text-to-SQL." },
@@ -92,6 +93,34 @@ export const L7: Level = {
     },
     {
       id: "7.7",
+      title: "Building golden datasets",
+      sessions: 2,
+      topics: [
+        { title: "What a golden dataset is", detail: "Define it as a versioned set of inputs, expected outputs or criteria, and metadata, trusted enough to settle an argument about quality." },
+        { title: "Where the cases come from", detail: "Mine production logs, support tickets and domain-expert questions, and generate synthetic cases with an LLM, then review them by hand." },
+        { title: "Coverage on purpose", detail: "Stratify cases by topic, difficulty, language and user type, and include unanswerable, adversarial and ambiguous questions." },
+        { title: "Labelling and agreement", detail: "Write labelling guidelines, have two people label a sample, measure agreement (Cohen's kappa) and resolve disagreements." },
+        { title: "Size, splits and leakage", detail: "Choose a size you can afford to run on every change, keep a held-out split, and avoid testing on text the prompt or index has already seen." },
+        { title: "Versioning and growth", detail: "Store the set in git or a dataset registry, tag versions, and add every production failure as a new case." },
+      ],
+      outcome: "You can build and maintain a golden dataset you trust enough to gate releases on.",
+    },
+    {
+      id: "7.8",
+      title: "LLM-as-a-judge",
+      sessions: 2,
+      topics: [
+        { title: "When a model can grade a model", detail: "Use a judge for open-ended qualities (helpfulness, tone, faithfulness) where exact match fails, and know when to use code checks or humans instead." },
+        { title: "Rubrics and scoring formats", detail: "Write a specific rubric and choose between pass/fail, a small integer scale, pairwise comparison and reference-based grading." },
+        { title: "Judge prompts that behave", detail: "Ask for reasoning before the verdict, give anchored examples, use structured output and set temperature to 0." },
+        { title: "Known biases", detail: "Recognise position, verbosity, self-preference and formatting bias, and counter them by swapping order, normalising length and using a different model family." },
+        { title: "Calibrating against humans", detail: "Label a sample by hand, compare with the judge, report agreement, and fix the rubric until they match." },
+        { title: "Cost and reliability", detail: "Sample, cache and batch judge calls, run a cheaper judge first, and treat judge scores as noisy estimates with intervals." },
+      ],
+      outcome: "You can build an LLM judge whose scores you have checked against human labels.",
+    },
+    {
+      id: "7.9",
       title: "Eval suites and regression testing",
       sessions: 2,
       topics: [
@@ -105,11 +134,14 @@ export const L7: Level = {
       outcome: "You can run an automated eval suite that blocks regressions and grows from real usage.",
     },
     {
-      id: "7.8",
-      title: "Evaluating RAG",
-      sessions: 5,
+      id: "7.10",
+      title: "Evaluating RAG with RAGAS",
+      sessions: 4,
       topics: [
         { title: "Four layers", detail: "Evaluate retrieval, the full pipeline, the user-facing application and safety separately." },
+        { title: "What RAGAS is", detail: "Explain the RAGAS framework: LLM-based metrics for RAG, and the samples it expects (question, retrieved contexts, answer, optional reference)." },
+        { title: "Running RAGAS on your pipeline", detail: "Build an evaluation dataset from your RAG app's outputs, choose the judge and embedding models, run the metrics and read the per-row scores." },
+        { title: "Test-set generation", detail: "Generate a first set of questions from your own documents, then review and prune it by hand." },
         { title: "Retriever on its own", detail: "Check whether the retriever finds what's needed, and diagnose misses and noisy results." },
         { title: "Retrieval metrics", detail: "Use recall@k, precision, MRR/nDCG and context recall/precision, knowing what each rewards." },
         { title: "Building the golden set", detail: "Write or generate questions with their relevant chunks and ideal answers, by hand or with LLM help and tools like DeepEval or RAGAS." },
@@ -121,7 +153,21 @@ export const L7: Level = {
       outcome: "You can evaluate a RAG app across retrieval, generation, pipeline, user-facing quality, cost and safety, and locate the root cause of a failure.",
     },
     {
-      id: "7.9",
+      id: "7.11",
+      title: "RAG metrics: faithfulness, relevancy, precision, recall, correctness",
+      sessions: 2,
+      topics: [
+        { title: "Faithfulness", detail: "Split an answer into claims and measure the share the retrieved context supports; this is your hallucination detector." },
+        { title: "Answer relevancy", detail: "Measure whether the answer addresses the question asked, whether or not it is true." },
+        { title: "Context precision", detail: "Measure whether the relevant chunks are ranked near the top of what was retrieved, so the signal is not buried in noise." },
+        { title: "Context recall", detail: "Measure whether everything needed to produce the reference answer was retrieved at all." },
+        { title: "Answer correctness", detail: "Combine factual overlap with the reference and semantic similarity into one score of how right the answer is." },
+        { title: "Reading the metrics together", detail: "Use the pattern of low and high scores to decide whether to fix retrieval, the prompt or the model." },
+      ],
+      outcome: "You can compute the five core RAG metrics, say what each one measures, and use them to locate a fault.",
+    },
+    {
+      id: "7.12",
       title: "Evaluating agents",
       sessions: 3,
       topics: [
@@ -135,6 +181,37 @@ export const L7: Level = {
       ],
       outcome: "You can measure whether an agent decides well, uses tools correctly, finishes efficiently, recovers and stays in bounds.",
     },
+    {
+      id: "7.13",
+      title: "Reviewing eval results and dashboards",
+      sessions: 1,
+      topics: [
+        { title: "Reading a run", detail: "Look beyond the average: per-slice scores, the worst cases, score distributions and the cases that flipped since the last run." },
+        { title: "Is the change real?", detail: "Use paired comparisons, confidence intervals and run-to-run noise to tell a real gain from luck." },
+        { title: "Error analysis", detail: "Read failing cases, tag them by cause, count the tags, and fix the biggest group first." },
+        { title: "Dashboards that get used", detail: "Show trend lines per metric, a regression table against the baseline, and cost and latency next to quality." },
+        { title: "Deciding to ship", detail: "Turn the numbers into a ship, hold or roll-back call with thresholds agreed in advance." },
+      ],
+      outcome: "You can read an eval report critically and decide, with evidence, whether a change ships.",
+    },
+    { id: "7.14", title: "Capstone: an eval suite for a production RAG app", sessions: 3, topics: [], outcome: "You have a golden dataset, RAGAS and judge metrics, a CI gate and a dashboard for a RAG app, and a report showing what the numbers found.", projectId: "rag-eval-suite" },
   ],
-  projects: [],
+  projects: [
+    {
+      id: "rag-eval-suite",
+      title: "Eval suite for a production RAG app",
+      summary: "Build the measurement layer for a RAG app: a reviewed golden dataset, retrieval and RAGAS metrics, a calibrated LLM judge, a CI regression gate and a results dashboard, then use it to prove a change helped.",
+      steps: [
+        { title: "Choose the app and its corpus", detail: "Use the RAG app from Level 4 (or the sample one in the guide) and write down what 'good' means for its users." },
+        { title: "Build the golden dataset", detail: "Generate candidate questions from your documents, review and fix them by hand, and tag each by topic, difficulty and answerability." },
+        { title: "Measure retrieval", detail: "Compute hit rate, MRR and context recall/precision for the retriever on its own." },
+        { title: "Run RAGAS", detail: "Score faithfulness, answer relevancy, context precision, context recall and answer correctness across the whole set." },
+        { title: "Calibrate an LLM judge", detail: "Write a rubric, compare the judge with your own labels on a sample and adjust until agreement is acceptable." },
+        { title: "Gate the build", detail: "Add a pytest eval that fails CI when a metric drops below the baseline by more than the allowed margin." },
+        { title: "Build the dashboard and prove a change", detail: "Store runs, chart the trends, then change one thing (chunk size, reranker or prompt) and show the before and after." },
+      ],
+      deliverable: "A repo with the versioned golden dataset, an eval runner, a CI gate, a dashboard, and a short report: baseline scores, the change you tested, the evidence it helped or did not, and the failure groups you found.",
+      stretch: ["Add online sampling: judge a small share of real traffic each day and chart drift.", "Add a second judge from a different model family and report where the two disagree."],
+    },
+  ],
 };

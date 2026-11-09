@@ -1,7 +1,7 @@
 ---
 project: context-managed-agent
-title: Long-running agent with managed context
-hours: 7
+title: Long-running agent with managed context and layered memory
+hours: 9
 stack: Python 3.11, openai SDK (any OpenAI-compatible provider), tiktoken, pytest
 cost: About $0.30 of API calls per full comparison with a small hosted model
 ---
@@ -10,10 +10,11 @@ You will run the same tool-using agent twice on a task that takes dozens of tool
 "append everything" context from Level 5, once with managed context (section budgets, tool-output compression,
 offloading to disk, rolling compaction, and a harness with a task list, progress file and a verification check). You
 finish with a README table that shows, in measured numbers, what context management bought you in correctness, tokens,
-latency and cost. This is the work that separates an agent demo from one that can run for an hour.
+latency and cost. In the last step you add layered memory (exact entity facts, episodes, distilled preferences, a router and decay) so the
+agent also remembers across sessions. This is the work that separates an agent demo from one that can run for an hour.
 
 ## Before you start
-- Python 3.11+, an API key for an OpenAI-compatible provider (or Ollama with a tool-calling model), lessons 6.1-6.8.
+- Python 3.11+, an API key for an OpenAI-compatible provider (or Ollama with a tool-calling model), lessons 6.1-6.18 (6.5-6.14 for the memory layer in Step 10).
 - This builds on your Level 5 agent. To keep the comparison clean, both versions here share one compact plain loop,
   one tool set and one model; only context handling differs. Port the ideas back into your LangGraph agent afterwards.
 
@@ -935,6 +936,222 @@ harness cannot catch it. That distinction is exactly what a reviewer wants to se
   compacts every turn, the half-budget rule is missing.
 - Results swing wildly between runs → normal at this sample size. Add runs, or report the range rather than the mean.
 
+## Step 10 · Add layered memory that survives across sessions
+**Goal:** a `memory.py` that remembers a fact, an event and a preference from an earlier session, routes each turn to only the memory it needs, fades old preferences, and deletes a user completely.
+
+Everything so far manages one long run. Real assistants also meet the same person again tomorrow. This step adds a compact
+layered memory (lessons 6.8-6.14) in plain SQLite, with the model call injected so tests never touch the network:
+
+- **Entity facts**: exact attributes, one value per `(user, entity, attribute)` (6.8).
+- **Episodes**: what happened, when and with what outcome (6.9).
+- **Preferences**: stable patterns distilled from sessions, with an evidence count, a half-life and decay (6.10, 6.14).
+- **A router**: reads only the stores a message needs (6.13).
+
+```python title="memory.py"
+"""Layered memory: entity facts, episodes, distilled preferences, a router and decay. Plain SQLite."""
+import json
+import re
+import sqlite3
+from datetime import datetime, timezone
+from pathlib import Path
+
+DB = Path("workspace/memory.db")
+
+SCHEMA = """
+CREATE TABLE IF NOT EXISTS entity_fact (user_id TEXT, entity TEXT, attribute TEXT, value TEXT, updated_at TEXT,
+                                        PRIMARY KEY (user_id, entity, attribute));
+CREATE TABLE IF NOT EXISTS episode (id INTEGER PRIMARY KEY AUTOINCREMENT, user_id TEXT, started_at TEXT,
+                                    summary TEXT, outcome TEXT);
+CREATE TABLE IF NOT EXISTS preference (user_id TEXT, statement TEXT, evidence INTEGER, half_life REAL,
+                                       last_used TEXT, PRIMARY KEY (user_id, statement));
+"""
+
+EXTRACT = """From this conversation return ONLY JSON:
+{"facts": [{"entity": "...", "attribute": "...", "value": "..."}],
+ "summary": "one or two sentences: what happened", "outcome": "what was decided or done",
+ "preferences": ["a stable preference of the user, or an empty list"]}
+Facts must be stated by the user. Do not infer anything.
+
+CONVERSATION:
+"""
+
+SMALLTALK = re.compile(r"^\s*(hi|hello|thanks|thank you|ok|okay|great|bye)\b", re.I)
+PAST = re.compile(r"\b(last time|yesterday|earlier|before|previous|last (mon|tues|wednes|thurs|fri|satur|sun)day)", re.I)
+FACT = re.compile(r"\b(what is|what's|who is|my .* (number|email|address|birthday|budget))\b", re.I)
+PREF = re.compile(r"\b(recommend|suggest|usually|prefer|something i'd like)\b", re.I)
+
+
+def retention(age_days: float, half_life_days: float) -> float:
+    return 0.5 ** (age_days / half_life_days)
+
+
+def now_iso() -> str:
+    return datetime.now(timezone.utc).isoformat()
+
+
+class LayeredMemory:
+    def __init__(self, llm, db_path: Path = DB, count=lambda s: len(s) // 4):
+        """llm: a function that takes a prompt string and returns the model's text."""
+        db_path.parent.mkdir(parents=True, exist_ok=True)
+        self.llm, self.count = llm, count
+        self.db = sqlite3.connect(db_path)
+        self.db.executescript(SCHEMA)
+
+    # ---- write path ------------------------------------------------------------------------------
+    def end_session(self, user_id: str, transcript: str, when: str | None = None) -> dict:
+        raw = self.llm(EXTRACT + transcript)
+        data = json.loads(raw[raw.find("{"): raw.rfind("}") + 1])        # tolerate text around the JSON
+        when = when or now_iso()
+        for f in data.get("facts", []):                                  # upsert: one current value per attribute
+            self.db.execute("INSERT INTO entity_fact VALUES (?,?,?,?,?) ON CONFLICT(user_id, entity, attribute) "
+                            "DO UPDATE SET value=excluded.value, updated_at=excluded.updated_at",
+                            (user_id, f["entity"].lower(), f["attribute"].lower(), f["value"], when))
+        self.db.execute("INSERT INTO episode (user_id, started_at, summary, outcome) VALUES (?,?,?,?)",
+                        (user_id, when, data.get("summary", ""), data.get("outcome", "")))
+        for stmt in data.get("preferences", []):                         # evidence grows when a preference repeats
+            self.db.execute("INSERT INTO preference VALUES (?,?,1,30,?) ON CONFLICT(user_id, statement) "
+                            "DO UPDATE SET evidence=evidence+1, half_life=MIN(half_life*1.5, 365), last_used=excluded.last_used",
+                            (user_id, stmt.strip().lower(), when))
+        self.db.commit()
+        return data
+
+    # ---- read path ---------------------------------------------------------------------------------
+    def route(self, message: str) -> list[str]:
+        if SMALLTALK.search(message):
+            return []                                    # small talk needs no memory
+        stores = []
+        if PAST.search(message):
+            stores.append("episodes")
+        if FACT.search(message):
+            stores.append("facts")
+        if PREF.search(message):
+            stores.append("preferences")
+        return stores or ["facts", "preferences"]        # unsure: fall back to the broad, cheap stores
+
+    def context_for(self, user_id: str, message: str, max_tokens: int = 600, now: datetime | None = None) -> str:
+        now = now or datetime.now(timezone.utc)
+        lines: list[str] = []
+        for store in self.route(message):
+            if store == "facts":
+                rows = self.db.execute("SELECT entity, attribute, value FROM entity_fact WHERE user_id=?", (user_id,))
+                lines += [f"- {e} {a}: {v}" for e, a, v in rows]
+            elif store == "episodes":
+                rows = self.db.execute("SELECT started_at, summary, outcome FROM episode WHERE user_id=? "
+                                       "ORDER BY started_at DESC LIMIT 3", (user_id,))
+                lines += [f"- {t[:10]}: {s} Outcome: {o}" for t, s, o in rows]
+            elif store == "preferences":
+                for stmt, ev, hl, last in self.db.execute(
+                        "SELECT statement, evidence, half_life, last_used FROM preference WHERE user_id=?", (user_id,)):
+                    age = (now - datetime.fromisoformat(last)).days
+                    if retention(age, hl) * min(1.0, ev / 3) >= 0.05:        # faded or thinly supported: skip
+                        lines.append(f"- preference ({ev} sessions): {stmt}")
+        block, used = [], 0
+        for line in lines:                                                   # honour the token budget
+            n = self.count(line)
+            if used + n > max_tokens:
+                break
+            block.append(line)
+            used += n
+        return "<memory>\n" + "\n".join(block) + "\n</memory>" if block else ""
+
+    # ---- forgetting ----------------------------------------------------------------------------------
+    def prune(self, now: datetime | None = None, threshold: float = 0.05) -> int:
+        now = now or datetime.now(timezone.utc)
+        dead = []
+        for user, stmt, ev, hl, last in self.db.execute("SELECT user_id, statement, evidence, half_life, last_used FROM preference"):
+            if retention((now - datetime.fromisoformat(last)).days, hl) * min(1.0, ev / 3) < threshold:
+                dead.append((user, stmt))
+        self.db.executemany("DELETE FROM preference WHERE user_id=? AND statement=?", dead)
+        self.db.commit()
+        return len(dead)
+
+    def delete_user(self, user_id: str) -> None:
+        for table in ("entity_fact", "episode", "preference"):
+            self.db.execute(f"DELETE FROM {table} WHERE user_id=?", (user_id,))
+        self.db.commit()
+```
+
+**How this code works**
+- `end_session` does the **write path** once per session: the model extracts facts, a summary and preferences as JSON; facts are *upserted*, so a changed value replaces the old one; the episode is appended; a repeated preference raises its `evidence` and lengthens its half-life (reinforcement).
+- `route` uses simple rules to pick stores. Small talk reads nothing; "last time" reads episodes; "what is my..." reads facts; an unsure message falls back to the two cheap stores. Replace it with an embedding or model classifier when you need more nuance (6.13).
+- `context_for` renders only the routed stores, caps the result at `max_tokens`, and hides preferences whose `retention x min(1, evidence/3)` is below 0.05: a one-off or long-faded preference is not worth the tokens.
+- `delete_user` removes the user from every table, which is the minimum for an erasure request (6.14). Add every new store to that list.
+- The `llm` argument makes the class testable offline: tests pass a function that returns canned JSON.
+
+Now a test file that fakes the model and checks the four behaviours that matter.
+
+```python title="tests/test_memory.py"
+import json
+from datetime import datetime, timedelta, timezone
+from pathlib import Path
+from memory import LayeredMemory, retention
+
+FAKE = json.dumps({
+    "facts": [{"entity": "arjun", "attribute": "diet", "value": "vegan"}],
+    "summary": "User booked a birthday table for Arjun on the 14th.",
+    "outcome": "Table booked at 8 pm",
+    "preferences": ["Prefers evening slots"],
+})
+
+
+def make(tmp_path: Path) -> LayeredMemory:
+    return LayeredMemory(llm=lambda prompt: FAKE, db_path=tmp_path / "m.db")
+
+
+def test_fact_event_and_preference_survive_a_new_session(tmp_path):
+    make(tmp_path).end_session("u1", "...transcript...")
+    mem = make(tmp_path)                                    # a new object, same database: "tomorrow"
+    assert "arjun diet: vegan" in mem.context_for("u1", "What is Arjun's diet?")
+    assert "Table booked at 8 pm" in mem.context_for("u1", "What did we do last time?")
+
+
+def test_router_skips_memory_for_small_talk(tmp_path):
+    mem = make(tmp_path)
+    mem.end_session("u1", "...")
+    assert mem.route("thanks!") == [] and mem.context_for("u1", "thanks!") == ""
+
+
+def test_preferences_need_evidence_and_fade(tmp_path):
+    mem = make(tmp_path)
+    for _ in range(3):
+        mem.end_session("u1", "...")
+    assert "Prefers evening slots".lower() in mem.context_for("u1", "recommend a time").lower()
+    future = datetime.now(timezone.utc) + timedelta(days=400)
+    assert mem.prune(now=future) == 1
+    assert retention(30, 30) == 0.5
+
+
+def test_delete_user_removes_everything(tmp_path):
+    mem = make(tmp_path)
+    mem.end_session("u1", "...")
+    mem.delete_user("u1")
+    for table in ("entity_fact", "episode", "preference"):
+        assert mem.db.execute(f"SELECT COUNT(*) FROM {table} WHERE user_id='u1'").fetchone()[0] == 0
+```
+
+**How this test works**
+- `make(tmp_path)` builds a second `LayeredMemory` over the same file to simulate a new session, which is the real requirement: memory must outlive the process.
+- The preference test needs three sessions of evidence before the preference is shown, then jumps 400 days ahead to prove that `prune` removes it (each repeat lengthens the half-life, 30 to 45 to 67.5 days, and 0.5^(400/67.5) is about 0.016, well under the 0.05 threshold).
+- The delete test queries the tables directly, because "it seems to be gone" is not evidence.
+
+**Run it**
+```bash title="terminal"
+pytest tests/test_memory.py -q
+```
+
+**You should see**
+```text
+....                                                                     [100%]
+4 passed
+```
+
+**Wire it into the agent.** In `managed_agent.py` create one `LayeredMemory(llm=lambda p: call([{"role": "user", "content": p}])[0]["content"])` at start-up. Each turn, add `mem.context_for(user_id, latest_user_message)` as a fifth budgeted section in `context.py` (600 tokens, after STATE), and call `mem.end_session(user_id, transcript)` when a run finishes. Re-run the three-run comparison and add a `memory_tokens` column to the table: the memory section should stay within its budget on every turn.
+
+**If it breaks**
+- `json.JSONDecodeError` in `end_session` → the model wrapped its JSON in prose or code fences. The `find("{")` slice handles most cases; for stubborn models, add "Return only JSON, no code fences" and use your provider's JSON mode.
+- The preference never appears → it needs evidence from three sessions (`min(1, ev / 3)`); lower the divisor while experimenting.
+- The test for pruning fails with 0 pruned → the half-life grew more than you expected; check `half_life` in the table, or jump further into the future.
+
 ## Ship it
 - **Repo:** both agents, `score.py`, the tests, and the `runs/` folder (the logs are evidence; commit them).
 - **README:** the problem in two sentences; the context diagram; the budget table; the comparison table with
@@ -951,3 +1168,5 @@ harness cannot catch it. That distinction is exactly what a reviewer wants to se
 - Replace the fixed 8-id pending list with relevance ranking, so state shows the tickets most related to recent notes.
 - Port `context.py` and `harness.py` into your Level 5 LangGraph agent as a `build_context` step before the agent node.
 - Swap the task for 200 tickets and find the point where even the managed version breaks.
+- Add a vector memory store (6.7) and a reflection log (6.12) to `memory.py`, and test whether lessons from failed runs raise success on the next run.
+- Replace the regex router with a small-model intent classifier and report routing accuracy and tokens saved.

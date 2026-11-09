@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { FLASHCARDS, LEVELS, MODULES, PROJECTS, levelOfModule, moduleById, practiceFor, projectById, type Level, type Module } from "../curriculum";
 import { guideFor } from "../curriculum/guides";
+import { migrateRecord } from "../curriculum/idmap";
 
 /** The four steps of every module, in order. */
 export const FLOW = ["read", "relate", "build", "check"] as const;
@@ -28,6 +29,8 @@ export interface ProgressData {
   practiced: Record<string, true>;
   /** YYYY-MM-DD → number of things done that day */
   days: Record<string, number>;
+  /** module-numbering version: 2 = after the memory, eval, guardrail and Kubernetes modules were inserted */
+  idScheme?: number;
   startLevel: number;
   onboarded: boolean;
   sprintStart?: string;
@@ -35,7 +38,7 @@ export interface ProgressData {
 }
 
 const KEY = "ai-path:progress:v1";
-const EMPTY: ProgressData = { topics: {}, modules: {}, flow: {}, builds: {}, steps: {}, links: {}, notes: {}, checks: {}, cards: {}, practiced: {}, days: {}, startLevel: 0, onboarded: false, dailyGoal: 1 };
+const EMPTY: ProgressData = { topics: {}, modules: {}, flow: {}, builds: {}, steps: {}, links: {}, notes: {}, checks: {}, cards: {}, practiced: {}, days: {}, idScheme: 2, startLevel: 0, onboarded: false, dailyGoal: 1 };
 
 export const today = (d = new Date()) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 const addDays = (n: number) => {
@@ -57,15 +60,19 @@ function load(): ProgressData {
 export function sanitize(x: unknown): ProgressData {
   const o = (x && typeof x === "object" ? x : {}) as Partial<ProgressData>;
   const rec = <T,>(v: unknown) => (v && typeof v === "object" && !Array.isArray(v) ? (v as Record<string, T>) : {});
+  // Progress saved before idScheme 2 uses the old module numbers: move those keys to today's numbers once.
+  const old = o.idScheme !== 2;
+  const byModule = <T,>(v: unknown) => (old ? migrateRecord(rec<T>(v)) : rec<T>(v));
   return {
-    topics: rec(o.topics),
-    modules: rec(o.modules),
-    flow: rec(o.flow),
-    builds: rec(o.builds),
+    idScheme: 2,
+    topics: byModule(o.topics),
+    modules: byModule(o.modules),
+    flow: byModule(o.flow),
+    builds: byModule(o.builds),
     steps: rec(o.steps),
     links: rec(o.links),
-    notes: rec(o.notes),
-    checks: rec(o.checks),
+    notes: byModule(o.notes),
+    checks: byModule(o.checks),
     cards: rec(o.cards),
     practiced: rec(o.practiced),
     days: rec(o.days),
@@ -121,7 +128,7 @@ export const useProgress = create<Store>((set, get) => {
   const commit = (patch: Partial<ProgressData>) => {
     set(patch);
     const s = get();
-    const data: ProgressData = { topics: s.topics, modules: s.modules, flow: s.flow, builds: s.builds, steps: s.steps, links: s.links, notes: s.notes, checks: s.checks, cards: s.cards, practiced: s.practiced, days: s.days, startLevel: s.startLevel, onboarded: s.onboarded, sprintStart: s.sprintStart, dailyGoal: s.dailyGoal };
+    const data: ProgressData = { idScheme: 2, topics: s.topics, modules: s.modules, flow: s.flow, builds: s.builds, steps: s.steps, links: s.links, notes: s.notes, checks: s.checks, cards: s.cards, practiced: s.practiced, days: s.days, startLevel: s.startLevel, onboarded: s.onboarded, sprintStart: s.sprintStart, dailyGoal: s.dailyGoal };
     save(data);
   };
   /** a capstone module is complete exactly when every step of its project is */

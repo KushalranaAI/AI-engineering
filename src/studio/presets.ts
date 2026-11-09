@@ -191,6 +191,42 @@ export const PRESETS: Preset[] = [
       edges: [edge("in", "gw"), edge("gw", "pc"), edge("pc", "rt"), { ...edge("rt", "p1"), weight: 3 }, { ...edge("rt", "p2"), weight: 1 }, edge("p1", "out"), edge("p2", "out")],
     },
   },
+  {
+    id: "layered-memory",
+    title: "Assistant with layered memory",
+    scenario: "A shopping assistant that remembers its customers: a memory router sends small talk straight to a cheap reply and sends everything else to an agent that can read entity, episodic, vector and procedural memory.",
+    levels: [6],
+    tryThis: [
+      "Delete the router and connect the input straight to the agent: every message now pays for the agent loop and its memory calls. Compare cost and p50.",
+      "Raise the agent's steps from 3 to 6: each extra step is another model call plus memory reads. Where does p95 go?",
+      "Set the vector memory's fail rate to 0.1 and watch failures: what should the agent do when a memory store is down (6.7)?",
+      "Change the router's weights from 3/7 to 6/4: more traffic skips memory. When would that hurt answer quality?",
+    ],
+    graph: {
+      nodes: [
+        node("in", "input", 0, 170, { label: "Customer message", knowledgeShare: 0.6 }),
+        node("rt", "router", 220, 170, { label: "Memory router (intent)", latencyMs: 20 }),
+        node("sm", "llm", 480, 20, { label: "Small-talk reply (no memory)", tier: "small", inTokens: 400, outTokens: 60 }),
+        node("ag", "agent", 480, 220, { label: "Assistant with memory", tier: "medium", steps: 3, inTokens: 2200, outTokens: 250, system: "You are a shopping assistant. Use the memory tools to recall the customer's details, past orders and preferences before answering." }),
+        node("m1", "memory", 780, 40, { label: "Entity memory (exact facts)", latencyMs: 15 }),
+        node("m2", "memory", 780, 170, { label: "Episodic memory (past sessions)", latencyMs: 40 }),
+        node("m3", "memory", 780, 300, { label: "Vector memory (preferences)", latencyMs: 60, failRate: 0.01 }),
+        node("m4", "memory", 780, 430, { label: "Procedural rules (playbook)", latencyMs: 10 }),
+        node("out", "output", 1060, 170, { label: "Reply" }),
+      ],
+      edges: [
+        edge("in", "rt"),
+        { ...edge("rt", "sm"), weight: 3 },
+        { ...edge("rt", "ag"), weight: 7 },
+        edge("sm", "out"),
+        edge("ag", "m1"),
+        edge("ag", "m2"),
+        edge("ag", "m3"),
+        edge("ag", "m4"),
+        edge("ag", "out"),
+      ],
+    },
+  },
 ];
 
 export const presetById = (id: string) => PRESETS.find((p) => p.id === id);

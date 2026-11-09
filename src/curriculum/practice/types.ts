@@ -11,7 +11,8 @@ export type StudioPreset =
   | "research-team" // planner → parallel researchers → writer → critic loop
   | "router-cascade" // cheap model first, escalate to a strong model on low confidence
   | "guarded-agent" // input guardrail → agent with tools → output guardrail → human approval
-  | "inference-serving"; // gateway → router → GPU replicas with batching and a prefix cache
+  | "inference-serving" // gateway → router → GPU replicas with batching and a prefix cache
+  | "layered-memory"; // memory router → agent with entity, episodic, vector and procedural memory
 
 /** Interactive simulators a practice task can open (see src/sims) */
 export type SimId =
@@ -25,7 +26,11 @@ export type SimId =
   | "batching" // static vs continuous batching (+ chunked prefill) on a request stream
   | "load-test" // concurrency ramp: TTFT, inter-token latency, p50/p95/p99, queue depth
   | "quantization" // FP16 / FP8 / INT8 / INT4 (AWQ, GPTQ): memory, speed, quality
-  | "llm-anatomy"; // prompt → tokens → embeddings → layers → logits → sampling, step by step
+  | "llm-anatomy" // prompt → tokens → embeddings → layers → logits → sampling, step by step
+  | "memory-window" // buffer vs window vs token buffer vs summary buffer: tokens per turn and what is forgotten
+  | "memory-decay" // forgetting curve: half-life, importance, reinforcement and the pruning threshold
+  | "rag-metrics" // faithfulness, context precision and recall from labelled claims and chunks
+  | "autoscaling"; // HPA reacting to a traffic ramp or spike: replicas, start-up lag, latency, cost
 
 export interface Practice {
   /** a realistic everyday situation that works the same way as the concept */

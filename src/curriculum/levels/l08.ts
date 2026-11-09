@@ -53,6 +53,34 @@ export const L8: Level = {
     },
     {
       id: "8.4",
+      title: "Guardrail frameworks: NeMo Guardrails, LlamaFirewall, Bedrock Guardrails",
+      sessions: 2,
+      topics: [
+        { title: "Why use a framework", detail: "Explain what a framework gives you over hand-written checks: tested detectors, one place to define policy, logging and an upgrade path." },
+        { title: "NeMo Guardrails", detail: "Describe NVIDIA's open-source toolkit, where you define input, dialog, retrieval, execution and output rails in Colang and configuration files around any LLM." },
+        { title: "LlamaFirewall", detail: "Describe Meta's open-source layered system for agents: PromptGuard 2 for jailbreak and injection detection, AlignmentCheck for goal hijacking, and CodeShield for insecure generated code." },
+        { title: "Amazon Bedrock Guardrails", detail: "Describe the managed service: content filters, denied topics, word filters, sensitive-information filters and contextual grounding checks, usable with any model through the ApplyGuardrail API." },
+        { title: "Comparing them", detail: "Compare where each runs, how you customise it, added latency, cost and what it covers, and say when to combine more than one." },
+        { title: "Limits", detail: "Expect false positives and bypasses from every framework, and keep tool permissions and approvals in code as the real guarantee." },
+      ],
+      outcome: "You can choose a guardrail framework for a project, say what it does and does not cover, and justify the choice.",
+    },
+    {
+      id: "8.5",
+      title: "NeMo Guardrails deep dive: Colang, input, output and topical rails",
+      sessions: 2,
+      topics: [
+        { title: "A config folder", detail: "Lay out config.yml, prompts.yml and a rails folder of .co files, and load them with the Python API." },
+        { title: "Colang basics", detail: "Write user intents with example utterances, bot responses and flows that connect them." },
+        { title: "Input rails", detail: "Enable the self-check-input rail to refuse jailbreak attempts, and add a custom flow that masks personal data." },
+        { title: "Output rails", detail: "Enable the self-check-output rail and a custom check so unsafe, off-policy or leaking answers are replaced by a safe reply." },
+        { title: "Topical rails", detail: "Keep a bot on its subject by defining off-topic intents and a canned refusal, and test that borderline questions land on the right side." },
+        { title: "Testing and cost", detail: "Write test conversations for every rail, read the logged decisions, and count the extra model calls and latency each rail adds." },
+      ],
+      outcome: "You can configure NeMo Guardrails with input, output and topical rails for a real app and test that they fire when they should.",
+    },
+    {
+      id: "8.6",
       title: "Securing agents and tools",
       sessions: 2,
       topics: [
@@ -66,7 +94,7 @@ export const L8: Level = {
       outcome: "You can give agents useful autonomy without unrestricted control of real systems.",
     },
     {
-      id: "8.5",
+      id: "8.7",
       title: "Securing RAG and knowledge",
       sessions: 1,
       topics: [
@@ -79,7 +107,7 @@ export const L8: Level = {
       outcome: "You can secure the knowledge layer under a RAG app.",
     },
     {
-      id: "8.6",
+      id: "8.8",
       title: "Privacy, PII and secrets",
       sessions: 2,
       topics: [
@@ -93,7 +121,7 @@ export const L8: Level = {
       outcome: "You can minimise how much sensitive data passes through an AI system.",
     },
     {
-      id: "8.7",
+      id: "8.9",
       title: "Red teaming",
       sessions: 2,
       topics: [
@@ -106,7 +134,7 @@ export const L8: Level = {
       outcome: "You can test defences adversarially instead of assuming they work.",
     },
     {
-      id: "8.8",
+      id: "8.10",
       title: "Responsible AI and governance",
       sessions: 1,
       topics: [
@@ -117,17 +145,18 @@ export const L8: Level = {
       ],
       outcome: "You can recognise when an AI app creates governance or compliance obligations.",
     },
-    { id: "8.9", title: "Capstone: red-team and harden an agentic RAG app", sessions: 1, topics: [], outcome: "You have an AI app that stays safe even when the model is fooled or makes a bad call.", projectId: "red-team-agentic-rag" },
+    { id: "8.11", title: "Capstone: red-team and harden an agentic RAG app with a guardrail framework", sessions: 1, topics: [], outcome: "You have an AI app that stays safe even when the model is fooled or makes a bad call.", projectId: "red-team-agentic-rag" },
   ],
   projects: [
     {
       id: "red-team-agentic-rag",
-      title: "Red-team and harden an agentic RAG app",
-      summary: "Attack an app you built in an earlier level, fix what breaks with layered defences, and lock the fixes in with security regression tests.",
+      title: "Red-team and harden an agentic RAG app (with a guardrail framework)",
+      summary: "Attack an app you built in an earlier level, fix what breaks with layered defences including a guardrail framework, and lock the fixes in with security regression tests.",
       steps: [
         { title: "Threat model", detail: "Take your agentic RAG or Level 5 agent app, draw its trust boundaries, and list what an attacker could reach: data, tools and outbound channels." },
         { title: "Attack it", detail: "Write test cases for direct and indirect injection, poisoned documents, jailbreaks, private-data extraction, tool misuse and unauthorised actions, and record the attack success rate." },
         { title: "Harden tools", detail: "Apply least-privilege tools, permission checks in code, approval gates for consequential actions and sandboxing for any code execution." },
+        { title: "Add a guardrail framework", detail: "Put NeMo Guardrails (input, output and topical rails) or another framework in front of the app, then measure what it blocks, what it wrongly blocks and what it adds in latency." },
         { title: "Harden data", detail: "Add input and output guardrails, document-level access control, PII redaction and keep secrets out of prompts and logs." },
         { title: "Lock it in", detail: "Turn every successful attack into a regression test that runs in CI, and re-run the full suite to report before and after rates." },
       ],
