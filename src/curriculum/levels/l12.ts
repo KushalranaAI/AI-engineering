@@ -1,0 +1,175 @@
+import type { Level } from "../types";
+
+export const L12: Level = {
+  number: 12,
+  title: "Inference engineering",
+  short: "Inference",
+  phase: "production",
+  summary:
+    "Take an open-weight model from \"it runs\" to a fast, cheap, observable inference service. Learn why the GPU behaves the way it does, read the engines that schedule it, measure before you tune, and finish with a benchmark anyone can reproduce.",
+  interviewWeight: 7,
+  interviewNote:
+    "Questions on KV cache memory, prefill vs decode, continuous batching, quantization and tail latency are now common for AI engineer roles that touch self-hosting, and standard for inference or platform roles. Pure application roles ask far less.",
+  jobWeight: 7,
+  jobNote:
+    "Teams that self-host open models (for cost, privacy or latency) need someone who can size GPUs, run vLLM or SGLang well and explain the bill. Teams that only call hosted APIs use this mainly to reason about latency and pricing, so the weight depends heavily on where you work.",
+  assumes: [1, 9, 10, 11],
+  modules: [
+    {
+      id: "12.1",
+      title: "GPUs and the roofline model",
+      sessions: 3,
+      topics: [
+        { title: "HBM, compute and memory bandwidth", detail: "Read a GPU datasheet for the three numbers that matter to inference: memory size, memory bandwidth and dense tensor FLOP/s." },
+        { title: "Weights plus KV cache must fit", detail: "Add up weight bytes, KV cache bytes and runtime overhead, and decide whether a model and its target concurrency fit on a card." },
+        { title: "The roofline model", detail: "Compute arithmetic intensity (FLOPs per byte moved) and compare it with the GPU's ridge point to tell whether a step is compute-bound or memory-bound." },
+        { title: "Why prefill is compute-bound and decode is memory-bound", detail: "Work through an 8B model on a modern GPU: prefill does thousands of FLOPs per weight byte read, decode does about one." },
+        { title: "Tensor parallelism, intuitively", detail: "Explain how splitting each layer across GPUs adds memory and bandwidth at the price of communication on every layer." },
+      ],
+      outcome: "You can predict, from a datasheet and a model config, roughly how fast a model will decode, how many sequences fit, and what bounds each phase.",
+    },
+    {
+      id: "12.2",
+      title: "Deploying vLLM and SGLang",
+      sessions: 2,
+      topics: [
+        { title: "One model, two engines", detail: "Serve the same open-weight model with vLLM and with SGLang behind an OpenAI-compatible API." },
+        { title: "The flags that matter", detail: "Context length, GPU memory fraction, maximum concurrent sequences, batched-token budget, tensor parallel size and dtype." },
+        { title: "Startup, warm-up and health", detail: "Read the startup log for KV cache capacity, wait for CUDA graph capture, and expose health checks." },
+        { title: "No GPU? A cheap path", detail: "Run a small model with llama.cpp or vLLM's CPU backend on a laptop, or rent one GPU for a few hours." },
+      ],
+      outcome: "You can bring up vLLM and SGLang reproducibly, explain every flag you set, and read how much KV cache the engine reserved.",
+    },
+    {
+      id: "12.3",
+      title: "Observability before optimization",
+      sessions: 2,
+      topics: [
+        { title: "The four numbers", detail: "Time to first token, inter-token latency (TPOT/ITL), throughput in tokens per second, and queue depth, and what each tells you." },
+        { title: "Engine metrics", detail: "Scrape the engine's Prometheus endpoint and find running and waiting requests, KV cache usage, preemptions and prefix cache hits." },
+        { title: "Prometheus and Grafana dashboards", detail: "Build an inference dashboard with latency percentiles from histograms, token rates and saturation signals." },
+        { title: "Client-side truth", detail: "Measure latency from the client as well, because the server cannot see network time or its own queue in front of it." },
+      ],
+      outcome: "You have a dashboard that shows latency, throughput and saturation for your inference server before you change a single setting.",
+    },
+    {
+      id: "12.4",
+      title: "Load testing and tail latency",
+      sessions: 2,
+      topics: [
+        { title: "Closed vs open load", detail: "Choose between fixed concurrency and a fixed arrival rate, and know which one hides queueing." },
+        { title: "1,000+ concurrent requests", detail: "Drive a server past a thousand concurrent streams with vllm bench serve, genai-perf, locust or an asyncio client." },
+        { title: "Percentiles, never just the mean", detail: "Report p50, p95 and p99 for TTFT, ITL and end-to-end latency, and explain why the mean hides the users who suffer." },
+        { title: "Realistic traffic shapes", detail: "Use input and output length distributions that match your product instead of one fixed prompt." },
+        { title: "Finding the knee", detail: "Ramp load until latency bends upward and record the throughput you can sell at an SLO." },
+      ],
+      outcome: "You can load test an inference server honestly and state its capacity as \"X requests per second at p95 TTFT under Y ms\".",
+    },
+    {
+      id: "12.5",
+      title: "Schedulers: continuous batching and chunked prefill",
+      sessions: 2,
+      topics: [
+        { title: "Static vs continuous batching", detail: "See why letting requests join and leave the batch at every step multiplies throughput." },
+        { title: "Reading the scheduler", detail: "Walk through one scheduling step in vLLM's and SGLang's scheduler code: waiting queue, running set, token budget, preemption." },
+        { title: "Chunked prefill", detail: "Split long prompts into chunks that share a step with decodes, so one big prompt does not stall everyone's tokens." },
+        { title: "The knobs and their trade-offs", detail: "Tune maximum sequences and batched tokens, and watch the TTFT vs ITL trade-off move on your dashboard." },
+      ],
+      outcome: "You can explain what the scheduler does on each step and tune its budget for a stated latency target.",
+    },
+    {
+      id: "12.6",
+      title: "Paged attention and KV cache management",
+      sessions: 2,
+      topics: [
+        { title: "Paged attention from the code", detail: "Follow block tables, the block pool and the attention kernel's block lookups in the engine source, not only the paper." },
+        { title: "Preemption when memory runs out", detail: "Know what the engine does when the KV cache fills: recompute or swap, and how it shows up in metrics." },
+        { title: "Long contexts", detail: "Size KV cache for 32k-128k token requests and use FP8 KV cache, CPU offload and context limits to keep them affordable." },
+        { title: "Eviction and compression ideas", detail: "Know sliding-window attention, attention sinks and token-dropping methods, and the quality risk each carries." },
+      ],
+      outcome: "You can explain exactly how the engine stores KV cache, predict when it will preempt, and choose a strategy for long-context traffic.",
+    },
+    {
+      id: "12.7",
+      title: "Prefix caching",
+      sessions: 1,
+      topics: [
+        { title: "Hash blocks and radix trees", detail: "Compare vLLM's hashed-block prefix cache with SGLang's RadixAttention tree." },
+        { title: "Which workloads it helps", detail: "Long shared system prompts, multi-turn chat, few-shot templates and agent loops win; unique one-shot prompts gain nothing." },
+        { title: "Keeping the hit rate high", detail: "Put stable content first in prompts, and route a session to the replica that already holds its prefix." },
+      ],
+      outcome: "You can predict, measure and raise the prefix cache hit rate for a given workload.",
+    },
+    {
+      id: "12.8",
+      title: "Quantization trade-offs",
+      sessions: 2,
+      topics: [
+        { title: "What gets quantized", detail: "Weights, activations and KV cache, and why weight-only quantization mostly helps decode while FP8 activations help prefill too." },
+        { title: "FP8, INT8 and INT4", detail: "Compare memory, speed and quality for each format, and which GPU generations accelerate which." },
+        { title: "AWQ and GPTQ", detail: "Know how each picks what to protect during 4-bit weight quantization, and where to find trusted checkpoints." },
+        { title: "Measure quality, not just speed", detail: "Run your own eval set on every quantized variant before you ship it." },
+      ],
+      outcome: "You can choose a quantization format for a workload and back the choice with speed, memory and quality numbers.",
+    },
+    {
+      id: "12.9",
+      title: "Speculative decoding, disaggregation and reading the research",
+      sessions: 2,
+      topics: [
+        { title: "Speculative decoding", detail: "Draft several tokens cheaply, verify them in one pass, and keep the output distribution unchanged." },
+        { title: "Where it stops helping", detail: "Low acceptance rates, large batches that are already compute-bound, and the draft model's own cost." },
+        { title: "Disaggregated prefill and decode", detail: "Run prefill and decode on separate GPU pools, move KV cache between them, and know when the transfer cost is worth it." },
+        { title: "Reading inference research", detail: "Follow papers and engine release notes instead of model launch news, and reproduce one claim yourself." },
+      ],
+      outcome: "You can decide whether speculative decoding or disaggregation will help a given workload, and keep your knowledge current from primary sources.",
+    },
+    {
+      id: "12.10",
+      title: "Kubernetes and autoscaling for inference",
+      sessions: 2,
+      topics: [
+        { title: "GPUs in Kubernetes", detail: "Request GPUs through the device plugin, pin node pools, and cache weights so pods start in minutes, not tens of minutes." },
+        { title: "Scale on queue depth, not CPU", detail: "Autoscale on waiting requests or KV cache usage with KEDA or custom metrics, because CPU says nothing about a GPU server's load." },
+        { title: "Cold starts and warm pools", detail: "Account for image pull, weight download and graph capture in your scaling policy." },
+        { title: "Routing across replicas", detail: "Balance by load and prefix affinity instead of round robin." },
+      ],
+      outcome: "You can run an inference deployment on Kubernetes that scales on the signal that actually measures load.",
+    },
+    {
+      id: "12.11",
+      title: "Unit economics, routing and token budgets",
+      sessions: 3,
+      topics: [
+        { title: "Cost per request, per user, per task", detail: "Turn GPU-hours or token prices into the unit your business sells, and find the volume where self-hosting wins." },
+        { title: "How inference breaks the margin", detail: "See how long outputs, retries, agent loops and idle GPUs quietly multiply cost per task." },
+        { title: "Your own model router", detail: "Route each request by cost, latency and quality, with a measured fallback when the cheap path fails." },
+        { title: "A token budget per request", detail: "Cap input, retrieved context, output and agent steps per request, and enforce the caps in code." },
+      ],
+      outcome: "You can show the cost of one task end to end and keep it in bounds with a router and enforced token budgets.",
+    },
+    { id: "12.12", title: "Capstone: a benchmarked inference service", sessions: 2, topics: [], outcome: "You have deployed, instrumented, load tested and tuned an inference service, and published a benchmark others can reproduce.", projectId: "benchmarked-inference-service" },
+  ],
+  projects: [
+    {
+      id: "benchmarked-inference-service",
+      title: "A benchmarked inference service",
+      summary: "Serve an open-weight model on vLLM or SGLang, instrument it, load test it past 1,000 concurrent requests, tune it, and publish a benchmark that anyone can rerun and check.",
+      steps: [
+        { title: "Pick hardware and a model", detail: "Choose a path you can afford: one rented GPU (for example a 24 GB L4 or A10-class card, or an 80 GB H100 for a few hours) with a 7-8B model, or a laptop with llama.cpp or vLLM's CPU backend and a 0.5-3B model. Write down the GPU, driver, engine version and model revision." },
+        { title: "Predict before you measure", detail: "From the datasheet and model config, estimate weight memory, KV cache per token, maximum concurrent sequences and the decode speed ceiling for one stream." },
+        { title: "Deploy and instrument", detail: "Serve the model with pinned versions in a container, scrape the engine's metrics with Prometheus, and build a Grafana dashboard for TTFT, ITL, throughput, queue depth and KV cache usage." },
+        { title: "Baseline load test", detail: "Run a fixed workload (stated input/output length distribution and seed) at rising concurrency up to at least 1,000 concurrent requests. Record p50/p95/p99 TTFT, ITL and end-to-end latency, plus output tokens per second." },
+        { title: "Tune one thing at a time", detail: "Try at least three of: batch and token budget, chunked prefill, prefix caching on a shared-prefix workload, FP8 or INT4 quantization, speculative decoding. Rerun the same test after each change and keep only what helps." },
+        { title: "Cost it", detail: "Convert the best sustained throughput at your latency target into dollars per million output tokens and per request, using the hourly price you actually paid." },
+        { title: "Publish it", detail: "Push a repo with the launch command, load test script, raw results, dashboard JSON and a README table, so someone else can rerun it and compare." },
+      ],
+      deliverable: "A public repo and short write-up: hardware and versions, predicted vs measured numbers, a before/after tuning table with p50/p95/p99 TTFT, ITL, throughput and $/1M tokens, and one-command reproduction steps.",
+      stretch: [
+        "Run the same benchmark on the other engine (vLLM vs SGLang) and explain the differences you see.",
+        "Add a quality check (a small eval set) to every tuning step so speed gains that hurt answers are visible.",
+        "Deploy on Kubernetes with autoscaling on queue depth and show a ramp test scaling out.",
+      ],
+    },
+  ],
+};
