@@ -1,4 +1,4 @@
-import { Blocks, Bot, MessagesSquare, Monitor, Moon, Search, Server, ShieldCheck, Sparkles, Sun, type LucideIcon } from "lucide-react";
+import { Blocks, Bot, MessagesSquare, Moon, Search, Server, ShieldCheck, Sparkles, Sun, type LucideIcon } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { phaseById, type PhaseId } from "../curriculum";
@@ -59,31 +59,28 @@ export function Weight({ value }: { value: number }) {
 }
 
 /* ---------- theme ---------- */
-type Theme = "system" | "light" | "dark";
+/** Dark is the default (the family look). Light is an opt-in; an old "system" choice falls back to dark. */
+type Theme = "dark" | "light";
 const THEME_KEY = "ai-path:theme";
 
-function applyTheme(t: Theme) {
-  const el = document.documentElement;
-  if (t === "system") el.removeAttribute("data-theme");
-  else el.setAttribute("data-theme", t);
-}
-
-export function initTheme() {
+function readTheme(): Theme {
   try {
-    applyTheme((localStorage.getItem(THEME_KEY) as Theme) || "system");
+    return localStorage.getItem(THEME_KEY) === "light" ? "light" : "dark";
   } catch {
-    /* storage blocked: follow the system */
+    return "dark";
   }
 }
 
+function applyTheme(t: Theme) {
+  document.documentElement.setAttribute("data-theme", t);
+}
+
+export function initTheme() {
+  applyTheme(readTheme());
+}
+
 export function ThemeToggle() {
-  const [theme, setTheme] = useState<Theme>(() => {
-    try {
-      return (localStorage.getItem(THEME_KEY) as Theme) || "system";
-    } catch {
-      return "system";
-    }
-  });
+  const [theme, setTheme] = useState<Theme>(readTheme);
   useEffect(() => {
     applyTheme(theme);
     try {
@@ -92,10 +89,10 @@ export function ThemeToggle() {
       /* not persisted */
     }
   }, [theme]);
-  const next: Record<Theme, Theme> = { system: "light", light: "dark", dark: "system" };
-  const Icon = theme === "light" ? Sun : theme === "dark" ? Moon : Monitor;
+  const Icon = theme === "light" ? Moon : Sun;
+  const to: Theme = theme === "light" ? "dark" : "light";
   return (
-    <button className="icon-btn" onClick={() => setTheme(next[theme])} title={`Theme: ${theme} (click to change)`} aria-label={`Theme: ${theme}`}>
+    <button className="icon-btn" onClick={() => setTheme(to)} title={`Switch to ${to} theme`} aria-label={`Switch to ${to} theme`}>
       <Icon size={16} />
     </button>
   );
