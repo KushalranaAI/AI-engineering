@@ -439,7 +439,7 @@ function Studio() {
             proOptions={{ hideAttribution: true }}
             colorMode="system"
           >
-            <Background variant={BackgroundVariant.Dots} gap={22} size={1.2} />
+            <Background variant={BackgroundVariant.Dots} gap={24} size={1.3} color="var(--grid)" />
             <Controls showInteractive={false} />
             <MiniMap pannable zoomable className="studio-minimap" />
           </ReactFlow>
