@@ -29,9 +29,9 @@ const LINKS = [
 export function Logo() {
   return (
     <svg className="logo" width="26" height="26" viewBox="0 0 32 32" aria-hidden>
-      <rect width="32" height="32" rx="8" fill="var(--text)" />
-      <path d="M9 22.5 16 9l7 13.5" fill="none" stroke="var(--bg)" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" />
-      <circle cx="16" cy="18.2" r="2.3" fill="var(--accent-on-dark, var(--bg))" />
+      <rect width="32" height="32" rx="8" fill="var(--accent)" />
+      <path d="M9 22.5 16 9l7 13.5" fill="none" stroke="var(--on-accent)" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" />
+      <circle cx="16" cy="18.2" r="2.3" fill="var(--on-accent)" />
     </svg>
   );
 }
