@@ -275,7 +275,7 @@ export const PRACTICE: PracticeMap = {
       sim: "load-test",
     },
   },
-  "10.9": {
+  "10.12": {
     realLife: {
       title: "The monitors in a hospital ICU",
       story:
@@ -309,7 +309,7 @@ export const PRACTICE: PracticeMap = {
       stretch: "Score 10% of live requests with an LLM judge, chart the score in Grafana, and export low scores into your eval candidates file.",
     },
   },
-  "10.10": {
+  "10.13": {
     realLife: {
       title: "A city's monsoon flood drill",
       story:
@@ -325,7 +325,7 @@ export const PRACTICE: PracticeMap = {
       title: "Two incident drills with kill switches and runbooks",
       goal: "Kill switches for prompt rollback and spend capping, two rehearsed drills (a prompt regression and a cost spike) with timed detection and recovery, and a one-page runbook for each.",
       minutes: 90,
-      stack: ["Python", "your deployed or local app", "Langfuse or config labels", "your metrics from 10.9"],
+      stack: ["Python", "your deployed or local app", "Langfuse or config labels", "your metrics from 10.12"],
       steps: [
         "Add two kill switches you can flip without a deploy: PROMPT_LABEL (which prompt version is served) and MAX_TOKENS_PER_HOUR (a spend cap that returns a polite 'busy' when exceeded).",
         "Drill 1: promote a prompt that quietly drops citations. Note when your online check or dashboard first shows it, then roll back by moving the label, and record detect and recover times.",
@@ -341,7 +341,7 @@ export const PRACTICE: PracticeMap = {
       stretch: "Pin your current model snapshot, run the full suite against the provider's newest snapshot, and write the go/no-go note you'd send before switching.",
     },
   },
-  "10.11": {
+  "10.14": {
     realLife: {
       title: "Taking a home pickle brand to supermarket shelves",
       story:
@@ -371,6 +371,138 @@ export const PRACTICE: PracticeMap = {
         "The README contains the gate-failure screenshot and the remaining checklist.",
       ],
       stretch: "Run a second experiment that beats the baseline, promote it through the label, and show the trace version change.",
+    },
+  },
+
+  "10.9": {
+    realLife: {
+      title: "A food-court manager running many stalls",
+      story:
+        "The food-court manager does not cook. They keep a list: three counters open for biryani, two for dosa, one for juice. If a stall's gas runs out, a replacement counter opens. When a stall updates its menu, one counter changes first and the next follows only once the first is serving properly. If the new menu causes trouble, they put the old board back. Each stall gets only the keys it needs, not the whole building's.",
+      mapping: [
+        { everyday: "The list of counters to keep open", concept: "Desired state in a Deployment" },
+        { everyday: "A replacement counter opens by itself", concept: "Self-healing pods" },
+        { everyday: "One counter at a time, waiting for each", concept: "Rolling update with readiness probes" },
+        { everyday: "Putting the old board back", concept: "kubectl rollout undo" },
+      ],
+    },
+    build: {
+      title: "Deploy the chat API to EKS with a rolling update and a rollback",
+      goal: "The FastAPI backend running on a small EKS cluster behind a load balancer, updated by a rolling release that you break on purpose and roll back.",
+      minutes: 120,
+      stack: ["AWS account", "eksctl", "kubectl", "Docker image of your app in ECR", "optionally Terraform"],
+      steps: [
+        "Create a 2-node cluster with eksctl, update your kubeconfig and confirm kubectl get nodes.",
+        "Write a Deployment (3 replicas, readiness and liveness probes, resource requests, rolling update with maxUnavailable 0), a Service and an Ingress.",
+        "Install the AWS Load Balancer Controller, apply the manifests and call the public URL.",
+        "Move the provider key to Secrets Manager and give the pod an IAM role (IRSA) so it reads it at start-up.",
+        "Release a version with a deliberately failing /healthz, watch the rollout stall, then roll back, and finally delete the cluster.",
+      ],
+      starter:
+        "# k8s/app.yaml (fragment)\n" +
+        "strategy:\n" +
+        "  type: RollingUpdate\n" +
+        "  rollingUpdate: {maxUnavailable: 0, maxSurge: 1}\n" +
+        "containers:\n" +
+        "  - name: api\n" +
+        "    image: <ACCOUNT>.dkr.ecr.<REGION>.amazonaws.com/chat-api:<TAG>\n" +
+        "    readinessProbe: {httpGet: {path: /healthz, port: 8000}}\n" +
+        "    # TODO: resources, livenessProbe, envFrom\n",
+      checks: [
+        "The public URL answers while a good rollout replaces pods, with no failed requests.",
+        "The bad release never receives traffic, and kubectl rollout undo restores the previous revision.",
+        "The pod has no static AWS keys and reads the secret through its role.",
+      ],
+      stretch: "Add a CI step that applies the manifest, waits on rollout status and undoes the rollout on timeout.",
+    },
+  },
+
+  "10.10": {
+    realLife: {
+      title: "A crowd rehearsal at a new metro station gate",
+      story:
+        "Before a new metro station opens, the operator invites volunteers and ramps them through the gates: 50 people, then 200, then 500 at rush-hour pace. They watch how long people wait and when the queue stops clearing. Volunteers pause between steps like real commuters, not a continuous sprint, and the test uses real ticket types, not one kind. It tells the operator how many gates open at peak and which gate jams first.",
+      mapping: [
+        { everyday: "Volunteers walking through the gates", concept: "Simulated users in Locust" },
+        { everyday: "Pausing like real commuters", concept: "wait_time between tasks" },
+        { everyday: "Ramping 50, 200, 500", concept: "Users and spawn rate, or a custom load shape" },
+        { everyday: "The point where the queue stops clearing", concept: "The knee: throughput flattens and p99 climbs" },
+      ],
+    },
+    build: {
+      title: "Find your API's breaking point with Locust",
+      goal: "A locustfile with realistic questions and think time that measures time to first token on a streaming endpoint, and a written capacity result from a ramp test.",
+      minutes: 90,
+      stack: ["Python", "locust", "your streaming chat API (or a mock server)"],
+      steps: [
+        "Build a mock model server that streams a canned reply after a configurable delay, so you can test without spending money.",
+        "Write a locustfile that posts questions from your golden set with a 5-15 second wait.",
+        "Add a streaming task that records time to first token as a custom metric.",
+        "Run a headless ramp to 200 users at 5 users/second for 10 minutes, saving CSV results.",
+        "Plot users, RPS, p95 latency and failures over time and write one sentence: the concurrency at which p95 TTFT crosses your budget.",
+      ],
+      starter:
+        "import random, json\n" +
+        "from locust import HttpUser, task, between\n" +
+        "\n" +
+        "QUESTIONS = [json.loads(l)[\"input\"] for l in open(\"golden.jsonl\", encoding=\"utf8\")]\n" +
+        "\n" +
+        "class ChatUser(HttpUser):\n" +
+        "    wait_time = between(5, 15)\n" +
+        "\n" +
+        "    @task\n" +
+        "    def ask(self):\n" +
+        "        # TODO: stream /chat/stream, time the first chunk, report TTFT\n" +
+        "        ...\n",
+      checks: [
+        "The results show a TTFT row separate from total time.",
+        "You name the user count where p95 TTFT exceeds your budget and what limit you suspect.",
+        "A second run against the real provider for two minutes shows whether 429s appear.",
+      ],
+      sim: "load-test",
+    },
+  },
+
+  "10.11": {
+    realLife: {
+      title: "Extra snack counters before the multiplex interval",
+      story:
+        "A multiplex has six snack counters but the interval rush needs fourteen. Staff watch the queue, not how busy each person looks, and open more counters as it grows, but only up to the stock room's capacity. Counters are closed slowly after the rush so the line does not reform. Training the extra staff takes five minutes, so the manager opens counters when the second half starts, not when the line is already out of the door.",
+      mapping: [
+        { everyday: "Opening counters as the queue grows", concept: "HPA: desired = ceil(current x metric / target)" },
+        { everyday: "Watching queue length, not staff busyness", concept: "Scaling on in-flight requests, not CPU" },
+        { everyday: "Closing counters slowly", concept: "Scale-down stabilisation window" },
+        { everyday: "Five minutes to train new staff", concept: "Cold start: nodes and image pulls delay scale-up" },
+      ],
+    },
+    build: {
+      title: "Autoscale on in-flight requests and prove it with Locust",
+      goal: "An HPA driven by an in-flight-requests metric (or CPU for a first pass) with tuned behaviour, shown holding latency steady during a Locust ramp.",
+      minutes: 120,
+      stack: ["Kubernetes cluster (EKS, kind or minikube)", "metrics-server", "Prometheus and an adapter or KEDA", "Locust"],
+      steps: [
+        "Add an inflight_requests gauge to the API and verify it appears in Prometheus.",
+        "Start with a CPU-based HPA (target 60%) and run your Locust ramp; note that latency rises while CPU stays low.",
+        "Switch to an in-flight-requests target (about 12 per pod, from your load test) with min 3 and max 20.",
+        "Set behaviour: scale up by at most 100% per minute, scale down one pod per two minutes with a five-minute window.",
+        "Re-run the ramp and capture replicas, users and p95 latency on one timeline; read the Vertical Pod Autoscaler recommendations (kubectl describe vpa) and adjust the CPU and memory requests.",
+      ],
+      starter:
+        "apiVersion: autoscaling/v2\n" +
+        "kind: HorizontalPodAutoscaler\n" +
+        "metadata: {name: chat-api}\n" +
+        "spec:\n" +
+        "  scaleTargetRef: {apiVersion: apps/v1, kind: Deployment, name: chat-api}\n" +
+        "  minReplicas: 3\n" +
+        "  maxReplicas: 20\n" +
+        "  metrics: []   # TODO: Pods metric inflight_requests, averageValue \"12\"\n" +
+        "  # TODO: behavior for scaleUp and scaleDown\n",
+      checks: [
+        "With CPU scaling, you show p95 latency degrading while CPU stays low and replicas barely move.",
+        "With the in-flight metric, replicas rise shortly after load and p95 stays inside the budget with a brief bump.",
+        "Replicas fall back gradually after the test, without flapping.",
+      ],
+      sim: "autoscaling",
     },
   },
 };

@@ -57,7 +57,7 @@ export const PRACTICE: PracticeMap = {
     },
   },
 
-  "4.2": {
+  "4.3": {
     realLife: {
       title: "A coaching teacher turning a textbook into revision cards",
       story:
@@ -108,7 +108,7 @@ export const PRACTICE: PracticeMap = {
     },
   },
 
-  "4.3": {
+  "4.4": {
     realLife: {
       title: "A library that shelves by subject",
       story:
@@ -155,7 +155,7 @@ export const PRACTICE: PracticeMap = {
     },
   },
 
-  "4.4": {
+  "4.5": {
     realLife: {
       title: "A pharmacist reading a vague request",
       story:
@@ -206,7 +206,7 @@ export const PRACTICE: PracticeMap = {
     },
   },
 
-  "4.5": {
+  "4.6": {
     realLife: {
       title: "A ride-hailing app finding your driver",
       story:
@@ -257,7 +257,7 @@ export const PRACTICE: PracticeMap = {
     },
   },
 
-  "4.6": {
+  "4.7": {
     realLife: {
       title: "Two archivists in a newsroom",
       story:
@@ -306,7 +306,7 @@ export const PRACTICE: PracticeMap = {
     },
   },
 
-  "4.7": {
+  "4.8": {
     realLife: {
       title: "A railway enquiry counter",
       story:
@@ -339,7 +339,7 @@ export const PRACTICE: PracticeMap = {
     },
   },
 
-  "4.8": {
+  "4.9": {
     realLife: {
       title: "A bank call-centre agent with a rate binder",
       story:
@@ -372,7 +372,7 @@ export const PRACTICE: PracticeMap = {
     },
   },
 
-  "4.9": {
+  "4.10": {
     realLife: {
       title: "A junior lawyer preparing a brief",
       story:
@@ -418,7 +418,7 @@ export const PRACTICE: PracticeMap = {
     },
   },
 
-  "4.10": {
+  "4.11": {
     realLife: {
       title: "A hiring pipeline with two rounds of screening",
       story:
@@ -460,7 +460,7 @@ export const PRACTICE: PracticeMap = {
     },
   },
 
-  "4.11": {
+  "4.12": {
     realLife: {
       title: "A hardware shop counter",
       story:
@@ -505,7 +505,7 @@ export const PRACTICE: PracticeMap = {
     },
   },
 
-  "4.12": {
+  "4.13": {
     realLife: {
       title: "An insurance claims assessor",
       story:
@@ -556,7 +556,7 @@ export const PRACTICE: PracticeMap = {
     },
   },
 
-  "4.13": {
+  "4.14": {
     realLife: {
       title: "A hospital triage desk",
       story:
@@ -574,7 +574,7 @@ export const PRACTICE: PracticeMap = {
       minutes: 120,
       stack: ["Python", "an LLM API", "your retriever", "optional: langgraph"],
       steps: [
-        "Take the largest failure group from your 4.13 Try-it classification and the questions in it, plus 10 baseline questions that already work.",
+        "Take the largest failure group from your 4.14 Try-it classification and the questions in it, plus 10 baseline questions that already work.",
         "Write route(q) returning one of: no_retrieval, single, multi_hop.",
         "Write grade(q, chunk) returning relevant or irrelevant with a cheap model; keep only relevant chunks.",
         "If fewer than 2 chunks are relevant, rewrite the query and retrieve again, at most 2 times, then abstain; for multi_hop, answer the first sub-question and use its answer to form the second query.",
@@ -604,7 +604,7 @@ export const PRACTICE: PracticeMap = {
     },
   },
 
-  "4.14": {
+  "4.15": {
     realLife: {
       title: "Ready-made masala versus grinding your own",
       story:
@@ -620,7 +620,7 @@ export const PRACTICE: PracticeMap = {
       title: "Your hybrid retriever inside a framework",
       goal: "A LlamaIndex (or LangChain) RAG pipeline that uses your own hybrid retriever and a reranker, with every step's inputs and outputs visible.",
       minutes: 75,
-      stack: ["Python", "llama-index (or langchain)", "your hybrid retriever from 4.6"],
+      stack: ["Python", "llama-index (or langchain)", "your hybrid retriever from 4.7"],
       steps: [
         "Wrap your hybrid search as a custom retriever class (BaseRetriever in LlamaIndex) that returns nodes with scores.",
         "Build a query engine from it with a reranking postprocessor and your grounding prompt as a custom template.",
@@ -637,7 +637,7 @@ export const PRACTICE: PracticeMap = {
     },
   },
 
-  "4.15": {
+  "4.16": {
     realLife: {
       title: "A university admissions help desk in admission season",
       story:
@@ -653,7 +653,7 @@ export const PRACTICE: PracticeMap = {
       title: "Milestone 1: a baseline with citations, abstention and an eval set",
       goal: "A baseline RAG app over your corpus that cites and abstains, plus an eval script and per-request cost log that every later improvement will be measured against.",
       minutes: 120,
-      stack: ["Python", "an LLM API", "your hybrid search engine from 4.7", "FastAPI (optional)"],
+      stack: ["Python", "an LLM API", "your hybrid search engine from 4.8", "FastAPI (optional)"],
       steps: [
         "Write 40 eval questions: 30 answerable with the gold chunk id and a reference answer, 10 not answerable from the corpus.",
         "Build answer() on your hybrid search with numbered-source citations and the NOT_FOUND rule from 4.9.",
@@ -667,6 +667,59 @@ export const PRACTICE: PracticeMap = {
         "Every logged request has latency, tokens and cost, and you know your average cost per answer.",
       ],
       studio: "rag-pipeline",
+    },
+  },
+
+  "4.2": {
+    realLife: {
+      title: "A railway station's overnight timetable refresh",
+      story:
+        "Every night at 1 am the station's display boards fetch the next day's timetable. Only trains whose timings changed are updated, so the job takes minutes, not hours. If the feed from the control room is down, the job retries twice and then pages the station master instead of blanking the boards. A rule says that if the new timetable has half as many trains as yesterday's, something is wrong and the old one stays up. Last year's timetable is never mixed into this year's: the new one is built on a second screen and swapped in at once.",
+      mapping: [
+        { everyday: "The 1 am nightly refresh", concept: "A DAG on a schedule, with logical dates and backfills" },
+        { everyday: "Updating only trains whose timing changed", concept: "Hashing documents and re-embedding only what changed" },
+        { everyday: "Half as many trains as yesterday: keep the old board", concept: "A data-quality gate that fails the run instead of deleting the index" },
+        { everyday: "Building the new timetable on a second screen, then swapping", concept: "Re-indexing into a new index and switching an alias" },
+      ],
+    },
+    build: {
+      title: "A scheduled ingestion DAG that keeps an index fresh",
+      goal: "An Airflow DAG that runs nightly, re-embeds only changed documents into a vector store, deletes removed ones, retries on failure and fails loudly on a bad run.",
+      minutes: 90,
+      stack: ["Python", "Apache Airflow (Docker or `pip install apache-airflow`)", "an embedding model", "pgvector or Qdrant"],
+      steps: [
+        "Create a folder of 30-50 markdown help articles and write a function that returns each file's id and SHA-256 hash.",
+        "Store the last-seen hash per document in a small table (SQLite or Postgres) and write list_changed() to return the ids that are new, changed or deleted.",
+        "Write a mapped task that chunks, embeds and upserts one document using ids like doc-id#n, and a delete task for removed documents.",
+        "Add a verify task that fails the run if the changed set is non-empty but nothing was written, or if the chunk count drops by more than 30%.",
+        "Schedule it daily with catchup=False, retries=3 and max_active_runs=1, then trigger it twice: the second run must change nothing. Edit one file, delete another and run again.",
+      ],
+      starter:
+        "from datetime import datetime\n" +
+        "from airflow.sdk import dag, task   # Airflow 2: from airflow.decorators import dag, task\n" +
+        "\n" +
+        "@dag(schedule=\"0 2 * * *\", start_date=datetime(2025, 1, 1), catchup=False,\n" +
+        "     max_active_runs=1, default_args={\"retries\": 3})\n" +
+        "def ingest_help():\n" +
+        "    @task\n" +
+        "    def list_changed() -> list[str]:\n" +
+        "        # TODO: compare file hashes with the stored ones\n" +
+        "        ...\n" +
+        "\n" +
+        "    @task\n" +
+        "    def process(doc_id: str) -> int:\n" +
+        "        # TODO: chunk, embed, upsert by f\"{doc_id}#{n}\"\n" +
+        "        ...\n" +
+        "\n" +
+        "    # TODO: verify task, then wire: verify(process.expand(doc_id=list_changed()))\n" +
+        "\n" +
+        "ingest_help()\n",
+      checks: [
+        "A second run with no file changes embeds zero documents and the chunk count is unchanged.",
+        "Editing one article re-embeds only that article; deleting one removes its chunks from the index.",
+        "Pointing the source at an empty folder makes the run fail at the verify step and leaves the index untouched.",
+      ],
+      stretch: "Build a v2 index with a different chunk size, check retrieval on 20 queries, then switch an alias to it.",
     },
   },
 };
