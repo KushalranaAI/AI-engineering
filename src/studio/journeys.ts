@@ -54,7 +54,7 @@ const SUPPORT: Journey = {
       change: "Embed the question, search the help articles, and give the top 5 passages to the model with an instruction to answer only from them.",
       why: "The facts live in ShopKart's documents, not in the model. Retrieval puts them in front of it.",
       watch: "Correct jumps to roughly 60-65%. Click the retriever: its recall (about 70%) now caps quality. A question whose passage wasn't retrieved is still answered from guesswork.",
-      modules: ["4.3", "4.4", "4.5", "4.8", "4.9"],
+      modules: ["4.2", "4.4", "4.5", "4.6", "4.9", "4.10"],
       graph: {
         nodes: [askIn(), n("emb", "embedder", 220, Y), n("ret", "retriever", 440, Y, { label: "Vector search", recall: 0.7 }), ragLlm(680), answer(920)],
         edges: [e("in", "emb"), e("emb", "ret"), e("ret", "llm"), e("llm", "out")],
@@ -65,7 +65,7 @@ const SUPPORT: Journey = {
       change: "Search by keywords (BM25) and meaning together, fuse the two lists, then rerank the top 30 with a cross-encoder.",
       why: "Vector search misses exact things customers type: order numbers, model names like 'XPS 13', and policy terms. Reranking puts the best passage first.",
       watch: "Recall rises to ~88%, and the reranker rescues half the misses. Correct passes 75%. Latency rises by ~150 ms: a good trade here.",
-      modules: ["4.2", "4.6", "4.10", "4.11", "4.12", "7.8"],
+      modules: ["4.3", "4.7", "4.11", "4.12", "4.13", "7.10", "7.11"],
       graph: {
         nodes: [askIn(), n("emb", "embedder", 200, Y), n("ret", "retriever", 400, Y, { label: "Hybrid search (BM25 + vectors)", recall: 0.88, latencyMs: 90 }), n("rr", "reranker", 620, Y, { label: "Cross-encoder rerank" }), ragLlm(840), answer(1060)],
         edges: [e("in", "emb"), e("emb", "ret"), e("ret", "rr"), e("rr", "llm"), e("llm", "out")],
@@ -97,7 +97,7 @@ const SUPPORT: Journey = {
       change: "A semantic cache answers repeated questions instantly. The RAG answer is tried with a small model first and escalated to the medium one only when it's unsure.",
       why: "A fifth of questions repeat ('what's the return window?'), and most answers are easy once the right passage is retrieved. Paying for the big model on every request is waste.",
       watch: "Cost per 1,000 requests drops sharply and p50 falls (cache hits take ~20 ms). Correct barely moves. Compare with the previous stage.",
-      modules: ["9.3", "9.5", "6.7", "12.11"],
+      modules: ["9.3", "9.5", "6.17", "12.11"],
       graph: {
         nodes: [
           askIn(),
@@ -120,7 +120,7 @@ const SUPPORT: Journey = {
       change: "An input guardrail screens for prompt injection and personal data. The order agent can now issue refunds, but refunds over ₹5,000 wait for a human.",
       why: "Once the assistant can act (refunds), a manipulated or mistaken answer costs money. Guardrails stop most attacks; a person signs off on the expensive actions.",
       watch: "Around 3% of requests are blocked. Some are attacks, some are false alarms you'd tune. The refund branch's p95 is dominated by the human: that's the price of safety, so gate only what needs it.",
-      modules: ["8.1", "8.2", "8.3", "8.4", "8.6", "10.5"],
+      modules: ["8.1", "8.2", "8.3", "8.4", "8.5", "8.6", "8.8", "10.5"],
       graph: {
         nodes: [
           askIn(),
@@ -143,7 +143,7 @@ const SUPPORT: Journey = {
       change: "At 40 questions a second, ShopKart self-hosts the answer model: an API gateway with rate limits, a load balancer, and two pools of vLLM servers sized for the traffic.",
       why: "At this volume the API bill is larger than renting GPUs, and the data must stay in ShopKart's cloud account. Now capacity is your problem: too few GPUs and the tail explodes.",
       watch: "Click a GPU pool: it shows the GPUs, batch size, requests/second and $/1M tokens for its model. Push traffic up to 60 req/s and watch a pool saturate, then add a replica.",
-      modules: ["9.4", "9.6", "10.6", "12.2", "12.4", "12.10"],
+      modules: ["9.4", "9.6", "10.6", "12.2", "12.4", "12.10", "10.9", "10.10", "10.11"],
       rps: 40,
       graph: {
         nodes: [
@@ -193,7 +193,7 @@ const AGENTS: Journey = {
       change: "Retry the flaky flight API with backoff, remember the customer's preferences, and cap the agent at a sensible number of steps.",
       why: "The flight API fails 6% of the time and the agent re-asked questions it had already answered. Agents fail in loops: bound them.",
       watch: "Failures fall (check the flight API's failure count). Memory adds a small, cheap call. Compare cost with the previous stage: the cap stops runaway loops.",
-      modules: ["2.9", "5.5", "5.9", "6.4"],
+      modules: ["2.9", "5.5", "5.9", "6.4", "6.5", "6.7", "6.8", "6.13"],
       graph: {
         nodes: [n("in", "input", 0, Y, { label: "Plan my trip", knowledgeShare: 0.9 }), n("mem", "memory", 240, 320, { label: "Customer preferences" }), n("ag", "agent", 260, Y, { label: "Travel agent", tier: "medium", steps: 3 }), n("t1", "tool", 560, 20, { label: "Flight search API", latencyMs: 900, failRate: 0.06, retries: 2 }), n("t2", "database", 560, 160, { label: "Customer calendar" }), n("out", "output", 860, Y, { label: "Plan" })],
         edges: [e("in", "ag"), e("ag", "mem"), e("ag", "t1"), e("ag", "t2"), e("ag", "out")],
@@ -204,7 +204,7 @@ const AGENTS: Journey = {
       change: "Split the work: a supervisor sends flights, hotels and visa checks to three specialists in parallel, then writes one itinerary.",
       why: "One agent juggling every tool got confused and slow. Specialists each have a small toolset and a focused prompt, and they run at the same time.",
       watch: "The whole request waits for the slowest specialist (the timeline shows the parallel bars). Cost goes up: you pay for three agents plus the merge. Is the quality gain worth it?",
-      modules: ["5.6", "5.7", "6.2", "6.6"],
+      modules: ["5.6", "5.7", "6.2", "6.16"],
       graph: {
         nodes: [
           n("in", "input", 0, Y + 20, { label: "Plan my trip", knowledgeShare: 0.9 }),
@@ -225,7 +225,7 @@ const AGENTS: Journey = {
       change: "Before anything is booked, an output check validates the itinerary and the customer approves the payment.",
       why: "Booking moves money and can't be undone easily. Agents can be tricked by malicious web content, or just be wrong.",
       watch: "p95 is now set by the human approval step. Blocked requests show where the output check catches bad itineraries.",
-      modules: ["5.8", "8.4", "8.2", "10.5"],
+      modules: ["5.8", "8.4", "8.6", "8.2", "10.5"],
       graph: {
         nodes: [
           n("in", "input", 0, Y + 20, { label: "Plan and book", knowledgeShare: 0.9 }),
@@ -246,7 +246,7 @@ const AGENTS: Journey = {
       change: "A critic reviews each itinerary against the request (dates, budget, visa) and sends weak ones back for one revision.",
       why: "Specialists sometimes return a hotel on the wrong dates. A cheap reviewer catches many of these before the customer sees them.",
       watch: "Correct rises a few points; cost and time rise with the revise rate. Try revise rates of 0.1, 0.35 and 0.8 and find the sweet spot.",
-      modules: ["5.2", "7.9", "6.8"],
+      modules: ["5.2", "7.8", "7.12", "6.18"],
       graph: {
         nodes: [
           n("in", "input", 0, Y + 20, { label: "Plan my trip", knowledgeShare: 0.9 }),
@@ -284,7 +284,7 @@ const SERVING: Journey = {
       change: "Nothing changed in the design. Traffic went from 2 to 20 requests a second.",
       why: "This is what happens to every service that's sized once and forgotten. The pool runs past ~70% utilisation and requests wait in the queue.",
       watch: "p50 looks fine but p99 shoots up, and some requests time out. The insights panel says which pool is overloaded. This is why you report p99, never the mean.",
-      modules: ["12.3", "12.4", "9.4"],
+      modules: ["12.3", "12.4", "9.4", "10.10"],
       rps: 20,
       graph: { nodes: [n("in", "input", 0, Y, { label: "Contract question" }), pool("p", 300, Y, { label: "vLLM · 8B · 1×H100", model: "8b", gpu: "h100", precision: "fp16", replicas: 1 }), n("out", "output", 600, Y, { label: "Streamed answer" })], edges: [e("in", "p"), e("p", "out")] },
     },
@@ -293,7 +293,7 @@ const SERVING: Journey = {
       change: "Three replicas behind a load balancer, with a gateway that rate-limits each customer.",
       why: "One replica can't keep up. The sizing card's 'replicas for this traffic' tells you how many you need at 70% utilisation.",
       watch: "The tail comes back down. The cost per request includes the GPU-hours: compare $/1k requests with the API-based designs in the other journeys.",
-      modules: ["12.10", "9.6"],
+      modules: ["12.10", "9.6", "10.9", "10.11"],
       rps: 20,
       graph: {
         nodes: [n("in", "input", 0, Y, { label: "Contract question" }), n("gw", "gateway", 200, Y, { label: "Gateway", rateLimit: 40 }), n("lb", "balancer", 400, Y), pool("p1", 620, 20, { label: "Replica 1", model: "8b", gpu: "h100", precision: "fp16", replicas: 1 }), pool("p2", 620, 180, { label: "Replica 2", model: "8b", gpu: "h100", precision: "fp16", replicas: 1 }), pool("p3", 620, 340, { label: "Replica 3", model: "8b", gpu: "h100", precision: "fp16", replicas: 1 }), n("out", "output", 900, Y, { label: "Streamed answer" })],
@@ -305,7 +305,7 @@ const SERVING: Journey = {
       change: "Turn on prefix caching (every request starts with the same long system prompt and contract template) and serve the model in FP8.",
       why: "FP8 halves the bytes read per decode step and frees memory for more concurrent requests. A cache hit skips work entirely.",
       watch: "Click the pool: weights drop from 16 to 8 GB, the batch that fits grows, and requests/second per replica rises. You may now need one replica fewer.",
-      modules: ["12.7", "12.8", "6.7"],
+      modules: ["12.7", "12.8", "6.17"],
       rps: 20,
       graph: {
         nodes: [n("in", "input", 0, Y, { label: "Contract question" }), n("gw", "gateway", 200, Y, { label: "Gateway", rateLimit: 40 }), n("pc", "cache", 400, Y, { label: "Prefix / response cache", hitRate: 0.15, latencyMs: 4 }), n("lb", "balancer", 600, Y), pool("p1", 820, 60, { label: "Replica 1 · FP8", model: "8b", gpu: "h100", precision: "fp8", kvPrecision: "fp8", replicas: 1, maxBatch: 128 }), pool("p2", 820, 260, { label: "Replica 2 · FP8", model: "8b", gpu: "h100", precision: "fp8", kvPrecision: "fp8", replicas: 1, maxBatch: 128 }), n("out", "output", 1080, Y, { label: "Streamed answer" })],

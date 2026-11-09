@@ -69,11 +69,13 @@ export const L9: Level = {
     },
     {
       id: "9.5",
-      title: "Caching",
-      sessions: 1,
+      title: "Caching: exact and semantic caching with Redis",
+      sessions: 2,
       topics: [
         { title: "Four kinds of cache", detail: "Tell apart exact-response, prompt (prefix) caching, retrieval caching and semantic caching." },
         { title: "What is safe to cache", detail: "Decide what may be reused, for whom, and when it must expire or be invalidated." },
+        { title: "Exact caching with Redis", detail: "Key answers by a hash of the normalised prompt, model and settings, set a time-to-live, and count hits." },
+        { title: "Semantic caching with Redis for RAG", detail: "Store query embeddings in Redis with a vector index, return a cached answer when a new question is within a similarity threshold, and key the cache by corpus version and user permissions." },
         { title: "Semantic caching", detail: "Reuse an answer for differently worded questions only when that is genuinely safe." },
         { title: "Freshness against speed and cost", detail: "Weigh stale answers against the latency and money a cache saves." },
         { title: "Measure the hit rate", detail: "Track real hit rates and savings rather than assuming the cache helps." },

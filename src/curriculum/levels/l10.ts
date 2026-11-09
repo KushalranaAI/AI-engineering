@@ -2,7 +2,7 @@ import type { Level } from "../types";
 
 export const L10: Level = {
   number: 10,
-  title: "LLMOps: development to production",
+  title: "LLMOps and AgentOps: development to production",
   short: "LLMOps",
   phase: "production",
   summary:
@@ -17,7 +17,7 @@ export const L10: Level = {
   modules: [
     {
       id: "10.1",
-      title: "What LLMOps adds",
+      title: "What LLMOps and AgentOps add",
       sessions: 1,
       topics: [
         { title: "LLMOps and MLOps", detail: "See what carries over from classic MLOps and what is new when the model is someone else's API." },
@@ -78,6 +78,7 @@ export const L10: Level = {
         { title: "Threats become checks", detail: "Turn the Level 8 threat model into checks that run on every request." },
         { title: "Schema validation and re-asking", detail: "Validate structured output (e.g. with Guardrails AI) and ask again on failure." },
         { title: "Conversational rails", detail: "Keep conversations on topic with NeMo Guardrails, and know when a plain validator is enough." },
+        { title: "Bedrock Guardrails in production", detail: "Attach a versioned guardrail to model calls or call ApplyGuardrail directly, tune each filter's strength, and read the intervention metrics." },
         { title: "Input and output checks", detail: "Catch injection attempts and personal data going in; ungrounded, off-topic or secret-leaking text coming out." },
         { title: "Limits for agents", detail: "Validate tool arguments and cap steps, retries and spend per request." },
         { title: "Measure the guards", detail: "Track each guard's latency, false-positive rate, and log every block and re-ask." },
@@ -127,6 +128,48 @@ export const L10: Level = {
     },
     {
       id: "10.9",
+      title: "Deploying on Kubernetes with Amazon EKS",
+      sessions: 3,
+      topics: [
+        { title: "Why Kubernetes", detail: "Say what you gain over EC2 plus CodeDeploy (declarative desired state, rolling updates, self-healing, one way to run every service) and what it costs in complexity." },
+        { title: "EKS building blocks", detail: "Create a cluster with eksctl or Terraform and tell the managed control plane from worker nodes (managed node groups or Fargate)." },
+        { title: "Deployments, Services and Ingress", detail: "Write manifests for a Deployment, a Service and an Ingress that provisions an AWS load balancer through the AWS Load Balancer Controller." },
+        { title: "Config and secrets", detail: "Use ConfigMaps for settings and give pods IAM permissions through IAM roles for service accounts so secrets come from Secrets Manager, not from the image." },
+        { title: "Probes and resources", detail: "Set readiness, liveness and startup probes and resource requests and limits so rollouts wait for healthy pods and no pod starves another." },
+        { title: "Rolling updates and rollback", detail: "Roll out a new image with a rolling update, watch it, and undo it with kubectl rollout undo." },
+      ],
+      outcome: "You can deploy and update an LLM service on EKS with health-checked rollouts and a way back.",
+    },
+    {
+      id: "10.10",
+      title: "Load testing with Locust",
+      sessions: 2,
+      topics: [
+        { title: "What to learn from a load test", detail: "Find the concurrency where latency or errors start to climb, and see which limit (your code, the provider's rate limit or the GPU) you hit first." },
+        { title: "Writing a locustfile", detail: "Define a user class, tasks and wait times in Python that send realistic questions drawn from a file." },
+        { title: "Streaming endpoints", detail: "Measure time to first token and total time for a streaming response, not just the status code." },
+        { title: "Ramp shapes", detail: "Use users and spawn rate, or a custom load shape, to run a ramp, a spike and a soak test." },
+        { title: "Reading results", detail: "Read requests per second, p50/p95/p99, failure rate and the point where throughput stops growing, and chart them against concurrent users." },
+        { title: "Real provider or mock", detail: "Decide when to test against a fake model server (cheap, tests your code) and when against the real provider (costly, tests the limits)." },
+      ],
+      outcome: "You can load-test an LLM service with a given number of concurrent users and find its breaking point.",
+    },
+    {
+      id: "10.11",
+      title: "Horizontal Pod Autoscaling and vertical scaling",
+      sessions: 2,
+      topics: [
+        { title: "The HPA control loop", detail: "Apply desiredReplicas = ceil(currentReplicas x currentMetric / targetMetric) and explain what the controller checks and how often." },
+        { title: "Choosing the metric", detail: "Explain why CPU is often the wrong signal for an app that mostly waits on a model API, and use in-flight requests or queue depth instead through custom metrics or KEDA." },
+        { title: "Stability", detail: "Set minimum and maximum replicas, stabilisation windows and scaling policies so the deployment does not flap." },
+        { title: "Vertical scaling", detail: "Use the Vertical Pod Autoscaler in recommendation mode to right-size requests, and know why not to scale one metric with both HPA and VPA." },
+        { title: "Nodes and cold starts", detail: "Add nodes with Cluster Autoscaler or Karpenter, and plan for image pull and model load time, which make scale-up slower than the spike." },
+        { title: "Prove it with a load test", detail: "Run the Locust ramp from the previous module and show replicas, latency and errors moving together." },
+      ],
+      outcome: "You can configure autoscaling that keeps latency inside budget under a traffic ramp without wasting capacity.",
+    },
+    {
+      id: "10.12",
       title: "Monitoring and observability",
       sessions: 3,
       topics: [
@@ -134,13 +177,14 @@ export const L10: Level = {
         { title: "App metrics", detail: "Export requests, latency percentiles, errors, model calls, tokens and guardrail blocks." },
         { title: "Grafana dashboards", detail: "Show health, traffic, latency, errors and token spend side by side." },
         { title: "Alerts worth waking for", detail: "Alert on error spikes, blown latency budgets, failed scaling and daily spend limits." },
-        { title: "Tracing in Langfuse", detail: "Trace each request through retrieval, model and tool calls with per-step latency and cost." },
+        { title: "Agent tracing in Langfuse", detail: "Trace each agent run as nested spans for retrieval, model calls and tool calls, group them into sessions, and attach scores and cost to every step." },
+        { title: "Pydantic Logfire", detail: "Instrument a FastAPI and LLM app with Logfire (built on OpenTelemetry), inspect traces and query them with SQL." },
         { title: "Online evals and feedback", detail: "Score a sample of live traffic, collect user feedback, and push failures back into the eval suite." },
       ],
       outcome: "You can see health, behaviour, cost and answer quality for the live system and feed what you learn back into evals.",
     },
     {
-      id: "10.10",
+      id: "10.13",
       title: "Incidents and rollbacks",
       sessions: 1,
       topics: [
@@ -152,7 +196,7 @@ export const L10: Level = {
       ],
       outcome: "You can detect, contain and recover from LLM-specific incidents with a rehearsed response.",
     },
-    { id: "10.11", title: "Capstone: the full LLMOps lifecycle", sessions: 3, topics: [], outcome: "You have a deployed LLM app where every change is versioned and evaluated, and whose health, quality and cost you can see live.", projectId: "llmops-lifecycle" },
+    { id: "10.14", title: "Capstone: the full LLMOps lifecycle", sessions: 3, topics: [], outcome: "You have a deployed LLM app where every change is versioned and evaluated, and whose health, quality and cost you can see live.", projectId: "llmops-lifecycle" },
   ],
   projects: [
     {
