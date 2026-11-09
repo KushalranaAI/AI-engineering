@@ -1,0 +1,143 @@
+import type { Level } from "../types";
+
+export const L6: Level = {
+  number: 6,
+  title: "Context engineering",
+  short: "Context",
+  phase: "agentic",
+  summary:
+    "Treat the context window as a scarce resource: choose what goes in, what stays, what gets compressed and what lives outside it. Then build the harness around an agent that applies those choices over long runs.",
+  interviewWeight: 6,
+  interviewNote:
+    "Seldom asked under its own name, but it sharpens your answers to RAG and agent questions. Talking clearly about context budgets, compaction and caching marks you out in senior interviews.",
+  jobWeight: 8,
+  jobNote:
+    "As systems grow, output quality depends more and more on what you put in front of the model. Context is often the hidden reason a product slowly gets worse or more expensive.",
+  assumes: [5],
+  modules: [
+    {
+      id: "6.1",
+      title: "The context window as a budget",
+      sessions: 1,
+      topics: [
+        { title: "More is not better", detail: "Treat the window as a limited budget where every token has to earn its place." },
+        { title: "How long context goes wrong", detail: "Explain context rot, distraction, contradictions, lost-in-the-middle and rising token cost." },
+        { title: "Looking at the real prompt", detail: "Dump exactly what the model receives and sort the useful parts from the noise." },
+        { title: "Splitting the budget", detail: "Allocate rough shares to instructions, history, retrieval, memory, tools and working state." },
+      ],
+      outcome: "You can tell when a model getting worse is really a context problem.",
+    },
+    {
+      id: "6.2",
+      title: "Selecting and assembling context",
+      sessions: 2,
+      topics: [
+        { title: "Building the window on purpose", detail: "Assemble instructions, history, retrieved text, memory, tool definitions, tool results and app state in code you control." },
+        { title: "Always, sometimes or never", detail: "Decide what is always present, fetched on demand, summarised or left out." },
+        { title: "Ranking what goes in", detail: "Prioritise by relevance, importance, recency and how trustworthy the source is." },
+        { title: "Order and labels", detail: "Structure the window so instructions, evidence, memory and user data stay clearly separate." },
+        { title: "Removing the junk", detail: "Drop duplicate, stale, contradictory and irrelevant material." },
+      ],
+      outcome: "You can build the smallest context that still lets the model make the current decision well.",
+    },
+    {
+      id: "6.3",
+      title: "Compression and compaction",
+      sessions: 2,
+      topics: [
+        { title: "Summaries that keep the goal", detail: "Condense history while keeping goals, constraints, decisions and open work." },
+        { title: "Shrinking tool output", detail: "Compact big tool results before they go back to the model." },
+        { title: "Rolling and layered summaries", detail: "Use running summaries and summaries-of-summaries for long tasks." },
+        { title: "Keeping exact data exact", detail: "Store ids, numbers and structured records separately where a summary could garble them." },
+        { title: "What you lose", detail: "Weigh the tokens saved against the detail thrown away." },
+      ],
+      outcome: "You can shrink context without dropping what the task depends on.",
+    },
+    {
+      id: "6.4",
+      title: "Offloading memory and state",
+      sessions: 2,
+      topics: [
+        { title: "Places outside the window", detail: "Use scratchpads, files, databases, memory stores and task records to hold information." },
+        { title: "Active vs stored", detail: "Separate what the model needs right now from what can be looked up later." },
+        { title: "Persisting plans and progress", detail: "Save plans, finished steps, decisions, intermediate results and key facts during long tasks." },
+        { title: "Note-taking agents", detail: "Build agents that write notes as they go and read them back when needed." },
+        { title: "Remembering vs making room", detail: "Distinguish memory (keeping things for later) from offloading (freeing space now)." },
+      ],
+      outcome: "You can build systems that don't need the whole task history inside the window.",
+    },
+    {
+      id: "6.5",
+      title: "Long-context strategies",
+      sessions: 1,
+      topics: [
+        { title: "Big windows don't fix it", detail: "Explain why a million-token window still needs context engineering." },
+        { title: "Working around the middle", detail: "Use placement, selective retrieval and restructuring to keep key facts where the model attends." },
+        { title: "Stuff, retrieve or summarise", detail: "Compare full stuffing, retrieval over history, summaries, hierarchies and selective loading." },
+        { title: "More or better", detail: "Decide when to give the model everything and when to give it only the relevant part." },
+      ],
+      outcome: "You can pick a strategy for very long documents, conversations and agent runs.",
+    },
+    {
+      id: "6.6",
+      title: "Managing tool context",
+      sessions: 1,
+      topics: [
+        { title: "Tools take space too", detail: "Count the tokens used by tool definitions and tool results." },
+        { title: "Showing only relevant tools", detail: "Expose a subset of tools per task or step instead of the whole catalogue." },
+        { title: "Filtering big results", detail: "Summarise or filter API, search and database output before the model sees it." },
+        { title: "Full results kept outside", detail: "Store the complete result externally and let the agent fetch details when it needs them." },
+        { title: "Clearing old observations", detail: "Stop long loops from piling up stale tool output." },
+      ],
+      outcome: "You can keep a tool-heavy agent coherent as its action history grows.",
+    },
+    {
+      id: "6.7",
+      title: "Caching and efficiency",
+      sessions: 1,
+      topics: [
+        { title: "Paying for the same tokens", detail: "See what resending a large fixed prompt costs in money and latency." },
+        { title: "Layout for cache hits", detail: "Put stable content first so provider prompt caching can reuse it." },
+        { title: "Stable vs changing", detail: "Keep fixed context apart from fast-changing task state." },
+        { title: "Trimming tokens", detail: "Cut redundant tokens without cutting useful information." },
+        { title: "Measure it", detail: "Track tokens, cache hit rate, latency and cost instead of guessing." },
+      ],
+      outcome: "You can make large-context apps cheaper and faster without hurting quality.",
+    },
+    {
+      id: "6.8",
+      title: "Harness engineering",
+      sessions: 2,
+      topics: [
+        { title: "What a harness is", detail: "Everything around the model that makes it an agent: loop, system prompt, tools, context handling, state, permissions and environment." },
+        { title: "Harness problem or model problem", detail: "Recognise that the same model succeeds or fails on a task depending on its harness." },
+        { title: "Designing the loop", detail: "Decide how model and tool calls alternate, how results and errors flow back, and when to stop." },
+        { title: "What the harness enforces", detail: "Keep fixed steps, permission checks, approvals and safe defaults in code, not in the model's hands." },
+        { title: "Work across many windows", detail: "Use a setup run that writes a plan and task list, then later runs that read progress, do one task and record it." },
+        { title: "Durable artifacts", detail: "Use progress files, task lists, commits and tests as the source of truth between runs." },
+        { title: "Checks the agent can run", detail: "Give the agent tests, linters and type checks so it verifies before declaring done." },
+        { title: "A legible environment", detail: "Short instruction files like AGENTS.md, a clear layout, and docs written for agents to read." },
+        { title: "Sub-agents", detail: "Give focused subtasks a fresh context and get back only a condensed result." },
+      ],
+      outcome: "You can design a harness that keeps an agent on track over work no single window can hold.",
+    },
+    { id: "6.9", title: "Capstone: a long-running agent with managed context", sessions: 1, topics: [], outcome: "You have an agent that stays useful through a long, tool-heavy session because its context is managed.", projectId: "context-managed-agent" },
+  ],
+  projects: [
+    {
+      id: "context-managed-agent",
+      title: "Long-running agent with managed context",
+      summary: "Take a tool-using agent from Level 5, show it degrading on a long task, then fix it with budgets, compaction, offloading and a harness, and prove the fix with numbers.",
+      steps: [
+        { title: "Make it fail first", detail: "Run your Level 5 agent on a long task (dozens of tool calls) with naive keep-everything context and record where it drifts, repeats or forgets." },
+        { title: "Set a budget", detail: "Define token budgets per context section and code that decides each turn what to keep, fetch, compress, offload or drop." },
+        { title: "Compact and offload", detail: "Add history summaries, external task state, selective memory recall and tool-output compression." },
+        { title: "Wrap it in a harness", detail: "Add a progress file and task list the agent maintains, a verification check before a task is marked done, and step and token limits." },
+        { title: "Hold the goal", detail: "Check that the original goal, constraints, finished work and pending tasks survive the whole run." },
+        { title: "Compare", detail: "Run naive and managed versions on the same tasks and compare task success, coherence, tokens, latency and cost." },
+      ],
+      deliverable: "A repo with both versions, the run logs, and a README table comparing naive and managed context on quality, tokens, latency and cost.",
+      stretch: ["Add prompt caching and report the cache hit rate and cost change.", "Kill the process mid-run and show the harness resuming from its progress file."],
+    },
+  ],
+};
