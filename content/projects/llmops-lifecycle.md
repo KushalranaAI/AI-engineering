@@ -1258,3 +1258,8 @@ instances one at a time), and the `final` event's `prompt_version` showing 1 aft
 - Switch CodeDeploy to blue/green and time a full rollback against the in-place number.
 - Replace `logs/traces.jsonl` with Langfuse or OpenTelemetry traces and link trace ids from the UI.
 - Add a canary: route 10% of traffic to `PROMPT_LABEL=staging` instances and compare guardrail block rates.
+- Move the deployment from EC2 and CodeDeploy to Amazon EKS (lesson 10.9): a Deployment with readiness probes and `maxUnavailable: 0`, an ALB Ingress, secrets through an IAM role for the service account, and a rollout you break on purpose and undo.
+- Load test the service with Locust (lesson 10.10): realistic questions from `cases.jsonl`, think time, and a streaming task that records time to first token. Write the concurrency at which p95 TTFT crosses your budget in the README.
+- Autoscale it (lesson 10.11): add a Horizontal Pod Autoscaler on in-flight requests per pod, replay the Locust ramp, and chart users, replicas and p95 latency on one timeline.
+- Add agent tracing with Langfuse or Logfire (lesson 10.12) and link a trace id from the Streamlit UI.
+- Put Bedrock Guardrails (or NeMo Guardrails, lesson 8.5) in front of the model and report blocks, false blocks and latency.

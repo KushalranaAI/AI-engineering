@@ -2,11 +2,11 @@ import type { Level } from "../types";
 
 export const L6: Level = {
   number: 6,
-  title: "Context engineering",
+  title: "Context engineering and agent memory",
   short: "Context",
   phase: "agentic",
   summary:
-    "Treat the context window as a scarce resource: choose what goes in, what stays, what gets compressed and what lives outside it. Then build the harness around an agent that applies those choices over long runs.",
+    "Treat the context window as a scarce resource: choose what goes in, what stays, what gets compressed and what lives outside it. Give agents layered memory (short-term, summary, vector, entity, episodic, semantic, procedural and reflective) with routing and forgetting. Then build the harness around an agent that applies those choices over long runs.",
   interviewWeight: 6,
   interviewNote:
     "Seldom asked under its own name, but it sharpens your answers to RAG and agent questions. Talking clearly about context budgets, compaction and caching marks you out in senior interviews.",
@@ -68,6 +68,136 @@ export const L6: Level = {
     },
     {
       id: "6.5",
+      title: "Short-term memory: buffers, windows and token bloat",
+      sessions: 1,
+      topics: [
+        { title: "Conversation buffer", detail: "Keep every message verbatim: perfect recall, but cost and latency grow with every turn and the window eventually overflows." },
+        { title: "Sliding window", detail: "Keep only the last k turns: cheap and predictable, but the model forgets the user's name, goal or constraint from turn 2." },
+        { title: "Token buffer", detail: "Trim by token count instead of message count, dropping the oldest turns first so the history always fits a fixed budget." },
+        { title: "Token bloat", detail: "See how repeated system text, long tool outputs and unbounded history make total tokens across a conversation grow roughly with the square of its length." },
+        { title: "Pinning what must stay", detail: "Protect the system prompt, the user's goal and hard constraints from trimming, and decide what to do with the turns that fall off." },
+      ],
+      outcome: "You can choose and implement a short-term memory strategy and show what it costs in tokens as a conversation grows.",
+    },
+    {
+      id: "6.6",
+      title: "Summary memory: abstractive, progressive, summary buffer",
+      sessions: 1,
+      topics: [
+        { title: "Abstractive summaries", detail: "Have a model rewrite old turns as a short summary in its own words, and compare that with extractive approaches that copy key sentences." },
+        { title: "Progressive summarisation", detail: "Fold each batch of new turns into a running summary so memory stays a fixed size however long the conversation runs." },
+        { title: "Summary buffer", detail: "Combine a summary of older turns with the most recent turns verbatim, trimmed to a token limit." },
+        { title: "What summaries lose", detail: "Watch for drift across repeated summarising, dropped numbers and ids, and invented details; keep exact data in structured fields instead." },
+        { title: "When to summarise", detail: "Trigger on a token threshold or a topic change, and run it off the critical path so the user does not wait." },
+      ],
+      outcome: "You can keep a long conversation coherent in a fixed token budget with a summary buffer, and measure what the summary lost.",
+    },
+    {
+      id: "6.7",
+      title: "Long-term memory: vector store memory",
+      sessions: 2,
+      topics: [
+        { title: "Memories as embeddings", detail: "Store each memory as text plus a vector and metadata (user id, timestamp, type, source) so it can be found by meaning later." },
+        { title: "What deserves to be stored", detail: "Write memories selectively: durable facts, preferences and decisions, not every sentence of chat." },
+        { title: "Recall that mixes signals", detail: "Rank retrieved memories by similarity, recency and importance together, instead of similarity alone." },
+        { title: "Updates, duplicates and contradictions", detail: "Detect a new memory that repeats or contradicts an old one, and update or supersede it rather than stacking both." },
+        { title: "Isolation and privacy", detail: "Keep each user's memories separate, filter by user id at query time and support deletion on request." },
+      ],
+      outcome: "You can give an agent memory that persists across sessions and recalls the right items on later turns.",
+    },
+    {
+      id: "6.8",
+      title: "Entity memory: structured entity extraction",
+      sessions: 1,
+      topics: [
+        { title: "Entities and attributes", detail: "Extract people, organisations, products, orders and places with their attributes into structured records using structured output." },
+        { title: "An entity store", detail: "Keep one record per entity in a key-value store, JSON document or small graph, and upsert new facts into it." },
+        { title: "Aliases and references", detail: "Resolve 'my sister', 'she' and 'Priya' to one entity, and merge duplicates." },
+        { title: "Injecting only what is relevant", detail: "Add to the prompt only the records for entities mentioned in the current turn." },
+        { title: "Staleness and conflicts", detail: "Timestamp each attribute and decide which value wins when new information disagrees with old." },
+      ],
+      outcome: "You can maintain an exact, queryable record of the people and things a user talks about, and inject just the relevant part each turn.",
+    },
+    {
+      id: "6.9",
+      title: "Episodic memory: time-aware session recall",
+      sessions: 1,
+      topics: [
+        { title: "What an episode is", detail: "Record an event as what happened, when, in which session, with what outcome, rather than as a bare fact." },
+        { title: "Session summaries", detail: "Write a short structured summary at the end of every session and store it with start and end times." },
+        { title: "Time-aware retrieval", detail: "Turn 'last Tuesday' or 'the first time we talked' into a date filter, and weight recent episodes higher." },
+        { title: "Recall in the reply", detail: "Reference an earlier session naturally ('last time we settled on the 5 pm slot') without dumping the whole transcript." },
+        { title: "Episodes vs facts", detail: "Tell when to keep the story of what happened and when to keep only the lesson from it." },
+      ],
+      outcome: "You can let an agent recall what happened in earlier sessions and when, and use it to answer time-based questions.",
+    },
+    {
+      id: "6.10",
+      title: "Semantic memory: distilled facts and patterns",
+      sessions: 1,
+      topics: [
+        { title: "From many episodes to one fact", detail: "Distil repeated experiences into general facts and preferences, for example 'prefers window seats' from five bookings." },
+        { title: "Behavioural patterns", detail: "Capture habits and styles (brief answers, evening orders) with a confidence level and the number of observations behind them." },
+        { title: "Consolidation jobs", detail: "Run a periodic background job that reads recent episodes and updates the fact store, like sleep consolidating the day." },
+        { title: "Provenance and correction", detail: "Keep links to the evidence for every fact and let the user see, edit and delete what the agent believes." },
+        { title: "Facts vs episodes", detail: "Contrast general knowledge about the user with the record of specific events, and keep both." },
+      ],
+      outcome: "You can build a memory of stable facts and patterns that is distilled from experience, backed by evidence and open to correction.",
+    },
+    {
+      id: "6.11",
+      title: "Procedural memory: updating instructions",
+      sessions: 1,
+      topics: [
+        { title: "Memory of how", detail: "Treat instructions, playbooks and tool-use rules as memory the agent can improve, separate from memory of facts." },
+        { title: "Learning from feedback", detail: "Turn user corrections and repeated failures into proposed changes to the system prompt or a playbook." },
+        { title: "Approval and versioning", detail: "Version every instruction change, gate it behind review or an eval, and keep the ability to roll back." },
+        { title: "Guarding against drift and injection", detail: "Stop a poisoned document or one bad conversation from rewriting the agent's rules." },
+        { title: "Rules or examples", detail: "Choose between adding a short rule and adding a worked example, and keep the instruction set small enough to follow." },
+      ],
+      outcome: "You can let an agent's own instructions improve from experience without letting them drift unchecked.",
+    },
+    {
+      id: "6.12",
+      title: "Self-reflection memory: agent postmortems",
+      sessions: 1,
+      topics: [
+        { title: "Reflection after a task", detail: "Have the agent write a short postmortem after each run: what was attempted, what went wrong, and what to do differently next time." },
+        { title: "Storing lessons", detail: "Save each reflection with the task type and outcome so it can be retrieved when a similar task arrives." },
+        { title: "Using lessons on the next attempt", detail: "Retrieve the most relevant reflections into the prompt before a new try, as in the Reflexion approach." },
+        { title: "Does it help?", detail: "Measure success rate with and without stored reflections on the same tasks, because a confident wrong lesson can make an agent worse." },
+        { title: "Keeping evidence", detail: "Store the trace or tool output behind each lesson so a human can verify it before it is trusted." },
+      ],
+      outcome: "You can add a reflection loop to an agent and show with numbers whether it improves later attempts.",
+    },
+    {
+      id: "6.13",
+      title: "Memory routing with intent classification",
+      sessions: 1,
+      topics: [
+        { title: "Not every turn needs every memory", detail: "Explain why loading all memory types on every turn wastes tokens and adds noise." },
+        { title: "Classify the intent first", detail: "Label each message (small talk, personal fact, follow-up, past event, how-to, new task) with a cheap classifier or small model." },
+        { title: "A routing table", detail: "Map each intent to the memory stores to read and a token budget for each, with a safe default when confidence is low." },
+        { title: "Routing writes", detail: "Decide on the way out where a new piece of information is saved: entity store, vector memory, episode log or nowhere." },
+        { title: "Measuring the router", detail: "Track routing accuracy, the share of retrieved memory the answer used, latency and tokens saved against loading everything." },
+      ],
+      outcome: "You can route each turn to only the memory it needs and prove the router saves tokens without hurting answers.",
+    },
+    {
+      id: "6.14",
+      title: "Forgetting and decay: half-life and the Ebbinghaus curve",
+      sessions: 1,
+      topics: [
+        { title: "Why forget on purpose", detail: "Name the reasons: stale facts, noisy recall, cost, and the user's right to be forgotten." },
+        { title: "The forgetting curve", detail: "Use Ebbinghaus's retention curve, R = e^(-t/S), and the equivalent half-life form, 0.5^(t/h), to model how strength fades with time." },
+        { title: "Reinforcement", detail: "Strengthen a memory each time it is recalled or confirmed, so useful items last longer and unused ones fade." },
+        { title: "Pruning policies", detail: "Compare time-to-live, least-recently-used, score thresholds and archiving, and choose one per memory type." },
+        { title: "Deletion you can audit", detail: "Support deletion on request across every store and keep a record that it happened." },
+      ],
+      outcome: "You can make memories fade, strengthen and expire by rule, and delete them reliably on request.",
+    },
+    {
+      id: "6.15",
       title: "Long-context strategies",
       sessions: 1,
       topics: [
@@ -79,7 +209,7 @@ export const L6: Level = {
       outcome: "You can pick a strategy for very long documents, conversations and agent runs.",
     },
     {
-      id: "6.6",
+      id: "6.16",
       title: "Managing tool context",
       sessions: 1,
       topics: [
@@ -92,7 +222,7 @@ export const L6: Level = {
       outcome: "You can keep a tool-heavy agent coherent as its action history grows.",
     },
     {
-      id: "6.7",
+      id: "6.17",
       title: "Caching and efficiency",
       sessions: 1,
       topics: [
@@ -105,7 +235,7 @@ export const L6: Level = {
       outcome: "You can make large-context apps cheaper and faster without hurting quality.",
     },
     {
-      id: "6.8",
+      id: "6.18",
       title: "Harness engineering",
       sessions: 2,
       topics: [
@@ -121,22 +251,24 @@ export const L6: Level = {
       ],
       outcome: "You can design a harness that keeps an agent on track over work no single window can hold.",
     },
-    { id: "6.9", title: "Capstone: a long-running agent with managed context", sessions: 1, topics: [], outcome: "You have an agent that stays useful through a long, tool-heavy session because its context is managed.", projectId: "context-managed-agent" },
+    { id: "6.19", title: "Capstone: a long-running agent with managed context and layered memory", sessions: 2, topics: [], outcome: "You have an agent that stays useful through a long, tool-heavy session and across sessions, because its context is managed and its memory is layered, routed and pruned.", projectId: "context-managed-agent" },
   ],
   projects: [
     {
       id: "context-managed-agent",
-      title: "Long-running agent with managed context",
-      summary: "Take a tool-using agent from Level 5, show it degrading on a long task, then fix it with budgets, compaction, offloading and a harness, and prove the fix with numbers.",
+      title: "Long-running agent with managed context and layered memory",
+      summary: "Take a tool-using agent from Level 5, show it degrading on a long task, then fix it with budgets, compaction, offloading, a layered memory system with routing and decay, and a harness, and prove the fix with numbers.",
       steps: [
         { title: "Make it fail first", detail: "Run your Level 5 agent on a long task (dozens of tool calls) with naive keep-everything context and record where it drifts, repeats or forgets." },
         { title: "Set a budget", detail: "Define token budgets per context section and code that decides each turn what to keep, fetch, compress, offload or drop." },
         { title: "Compact and offload", detail: "Add history summaries, external task state, selective memory recall and tool-output compression." },
+        { title: "Layer the memory", detail: "Add short-term and summary memory, a vector store for long-term recall, an entity store and an episode log, and route each turn to only the memory it needs." },
+        { title: "Forget on purpose", detail: "Give memories a half-life, reinforce the ones that get used, and prune or archive the rest, with a delete-on-request path." },
         { title: "Wrap it in a harness", detail: "Add a progress file and task list the agent maintains, a verification check before a task is marked done, and step and token limits." },
         { title: "Hold the goal", detail: "Check that the original goal, constraints, finished work and pending tasks survive the whole run." },
         { title: "Compare", detail: "Run naive and managed versions on the same tasks and compare task success, coherence, tokens, latency and cost." },
       ],
-      deliverable: "A repo with both versions, the run logs, and a README table comparing naive and managed context on quality, tokens, latency and cost.",
+      deliverable: "A repo with both versions, the run logs, and a README table comparing naive and managed context on quality, tokens, latency and cost, plus a memory test showing the agent recalling a fact, an event and a preference from earlier sessions.",
       stretch: ["Add prompt caching and report the cache hit rate and cost change.", "Kill the process mid-run and show the harness resuming from its progress file."],
     },
   ],

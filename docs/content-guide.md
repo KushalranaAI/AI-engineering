@@ -56,3 +56,16 @@ minutes: 12
 Then `# Title`, the teaching, a `## Try it` with `<details><summary>Reference</summary>…</details>`, a
 `## Check yourself` with exactly 3 questions each followed by `<details><summary>Answer</summary>…</details>`, and
 `## Sources` with 1-4 real URLs you are confident exist. 500-900 words of prose.
+
+## Module numbers and saved progress
+
+Module ids (`6.15`) are used as lesson ids, practice keys, progress keys and links from Studio journeys. When modules are
+inserted into a level, later ones move down. Do not renumber by hand: use the same rule in three places and keep them in
+step.
+
+1. Rename `content/LNN/<id>-<slug>.md` and the `module:` line inside it.
+2. Update `id:` in `levels/lNN.ts`, the key in `practice/pNN.ts`, and the `modules: [...]` lists in `src/studio/journeys.ts`.
+3. Add the old-to-new rule to `src/curriculum/idmap.ts` and bump `idScheme` in `src/state/progress.ts`, so a learner's saved
+   progress and notes move with the lessons. `idmap.test.ts` pins the current rules.
+
+Cross-references in prose ("see 6.17") are plain text; search for the old id when you renumber.

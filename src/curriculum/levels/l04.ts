@@ -28,6 +28,20 @@ export const L4: Level = {
     },
     {
       id: "4.2",
+      title: "Scheduled ingestion pipelines with Airflow",
+      sessions: 2,
+      topics: [
+        { title: "Why a script is not a pipeline", detail: "Explain what breaks when ingestion is a one-off script: no schedule, no retries, no record of what ran, and an index that quietly goes stale." },
+        { title: "DAGs, tasks and dependencies", detail: "Model ingestion as a directed acyclic graph (fetch, parse, chunk, embed, upsert, verify) and say what a task, an operator and a dependency are in Airflow." },
+        { title: "Scheduling and backfills", detail: "Run a DAG on a cron or data-interval schedule, understand logical dates, and backfill a range of missed runs without duplicating data." },
+        { title: "Idempotent tasks and change detection", detail: "Make every task safe to re-run: hash documents, upsert by a stable id, and re-embed only what changed or was deleted." },
+        { title: "Re-indexing without downtime", detail: "Handle an embedding-model or chunking change by building a new index beside the old one, checking it, then switching an alias." },
+        { title: "Retries, alerts and data quality gates", detail: "Set retries and timeouts, fail loudly when a source is empty or chunk counts drop sharply, and send an alert a person will see." },
+      ],
+      outcome: "You can run document ingestion on a schedule so the search index stays fresh, re-runs safely, and tells you when it breaks.",
+    },
+    {
+      id: "4.3",
       title: "Chunking",
       sessions: 2,
       topics: [
@@ -39,7 +53,7 @@ export const L4: Level = {
       outcome: "You can pick a chunking strategy for a corpus from its structure and the questions people will ask.",
     },
     {
-      id: "4.3",
+      id: "4.4",
       title: "Embeddings",
       sessions: 2,
       topics: [
@@ -51,7 +65,7 @@ export const L4: Level = {
       outcome: "You can choose and run an embedding model that fits a retrieval task.",
     },
     {
-      id: "4.4",
+      id: "4.5",
       title: "Semantic search from scratch",
       sessions: 2,
       topics: [
@@ -63,33 +77,37 @@ export const L4: Level = {
       outcome: "You can build semantic search with NumPy alone, so you know exactly what a vector database automates.",
     },
     {
-      id: "4.5",
+      id: "4.6",
       title: "Vector databases and approximate search",
       sessions: 3,
       topics: [
-        { title: "Storing vectors with their metadata", detail: "Keep vectors, text, ids and metadata together in pgvector, Qdrant or similar." },
-        { title: "Filtered top-k queries", detail: "Combine similarity search with metadata filters such as tenant, date or document type." },
+        { title: "Storing vectors with their metadata", detail: "Keep vectors, text, ids and metadata together, whether in Postgres, a search cluster or a dedicated vector store." },
+        { title: "pgvector on Postgres", detail: "Enable the extension, add a vector column, build an HNSW or IVFFlat index, query with the distance operators and filter with ordinary SQL." },
+        { title: "OpenSearch k-NN", detail: "Define a knn_vector field, pick an engine and method, and run approximate nearest-neighbour queries next to the keyword features the same cluster already has." },
+        { title: "Filtered top-k queries", detail: "Combine similarity search with metadata filters such as tenant, date or document type, and know why a filter can hurt recall in an approximate index." },
         { title: "Why approximate search exists", detail: "Work out when scanning every vector becomes too slow and what ANN trades away." },
-        { title: "HNSW and IVF intuition", detail: "Understand the speed, memory and recall trade-offs of the two common index families." },
-        { title: "Updates and deletes", detail: "Handle changing data and the operational chores of a live index." },
+        { title: "HNSW and IVF intuition", detail: "Understand the speed, memory and recall trade-offs of the two common index families and the knobs (m, ef_construction, ef_search, lists, probes) that move them." },
+        { title: "Choosing a store", detail: "Pick between pgvector, OpenSearch and a dedicated vector database from corpus size, filtering needs, hybrid-search needs and what your team already runs." },
+        { title: "Updates and deletes", detail: "Handle changing data and the operational chores of a live index: vacuum, merges, reindexing and aliases." },
       ],
-      outcome: "You can index a real corpus in a vector database and query it with filters at speed.",
+      outcome: "You can index a real corpus in pgvector or OpenSearch, query it with filters at speed, and justify the choice of store.",
     },
     {
-      id: "4.6",
+      id: "4.7",
       title: "Keyword and hybrid search",
       sessions: 2,
       topics: [
-        { title: "BM25", detail: "Explain how classic keyword ranking works and why it still wins on some queries." },
-        { title: "Sparse vs dense", detail: "Compare keyword and vector retrieval on the same question set." },
-        { title: "Fusing results with RRF", detail: "Merge two ranked lists with Reciprocal Rank Fusion." },
+        { title: "BM25", detail: "Explain how classic keyword ranking works (term frequency, inverse document frequency, length normalisation) and why it still wins on some queries." },
+        { title: "Sparse vs dense", detail: "Compare keyword (BM25) and dense vector retrieval on the same question set." },
+        { title: "BM25 + dense in one query", detail: "Run both retrievers in OpenSearch (a hybrid query with score normalisation) or in Postgres (full-text search beside pgvector), and know what each setup costs." },
+        { title: "Fusing results with RRF", detail: "Merge two ranked lists with Reciprocal Rank Fusion, and compare it with weighted score blending." },
         { title: "When hybrid pays off", detail: "Recognise queries (ids, names, exact phrases) where hybrid clearly beats either alone." },
       ],
       outcome: "You can choose dense, sparse or hybrid retrieval on evidence instead of defaulting to vectors.",
     },
-    { id: "4.7", title: "Capstone: a hybrid search engine", sessions: 1, topics: [], outcome: "You have shipped a working hybrid search service.", projectId: "hybrid-search-engine" },
+    { id: "4.8", title: "Capstone: a hybrid search engine", sessions: 1, topics: [], outcome: "You have shipped a working hybrid search service.", projectId: "hybrid-search-engine" },
     {
-      id: "4.8",
+      id: "4.9",
       title: "What RAG is, and when not to use it",
       sessions: 1,
       topics: [
@@ -101,7 +119,7 @@ export const L4: Level = {
       outcome: "You can decide whether a problem genuinely needs RAG.",
     },
     {
-      id: "4.9",
+      id: "4.10",
       title: "Baseline RAG by hand",
       sessions: 2,
       topics: [
@@ -113,7 +131,7 @@ export const L4: Level = {
       outcome: "You have a working RAG app whose every step you understand.",
     },
     {
-      id: "4.10",
+      id: "4.11",
       title: "Reranking",
       sessions: 2,
       topics: [
@@ -125,7 +143,7 @@ export const L4: Level = {
       outcome: "You can improve the context sent to the model without stuffing in more chunks.",
     },
     {
-      id: "4.11",
+      id: "4.12",
       title: "Rewriting the query",
       sessions: 2,
       topics: [
@@ -137,7 +155,7 @@ export const L4: Level = {
       outcome: "You can turn hard user questions into queries that retrieve the right evidence.",
     },
     {
-      id: "4.12",
+      id: "4.13",
       title: "Grounding, citations and saying \"I don't know\"",
       sessions: 1,
       topics: [
@@ -149,7 +167,7 @@ export const L4: Level = {
       outcome: "You can produce answers that trace back to sources and abstain when the sources fall short.",
     },
     {
-      id: "4.13",
+      id: "4.14",
       title: "Advanced RAG patterns",
       sessions: 3,
       topics: [
@@ -162,7 +180,7 @@ export const L4: Level = {
       outcome: "You can name the major RAG variants and pick one based on why your baseline is failing.",
     },
     {
-      id: "4.14",
+      id: "4.15",
       title: "RAG with frameworks",
       sessions: 1,
       topics: [
@@ -172,7 +190,7 @@ export const L4: Level = {
       ],
       outcome: "You can use a RAG framework productively while still knowing what it does underneath.",
     },
-    { id: "4.15", title: "Capstone: an advanced RAG app", sessions: 1, topics: [], outcome: "You have deployed a RAG app that goes well beyond retrieve-and-stuff.", projectId: "advanced-rag-app" },
+    { id: "4.16", title: "Capstone: an advanced RAG app", sessions: 1, topics: [], outcome: "You have deployed a RAG app that goes well beyond retrieve-and-stuff.", projectId: "advanced-rag-app" },
   ],
   projects: [
     {
