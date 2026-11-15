@@ -188,6 +188,8 @@ export const PRACTICE: PracticeMap = {
       title: "Redact before the model and before the logs",
       goal: "A chat wrapper that masks Indian and common PII before calling the model, keeps a server-side token map, scrubs logs, and has tests proving no PII or secret lands in the log file.",
       minutes: 75,
+
+      studio: "hr-helpdesk",
       stack: ["Python", "presidio-analyzer (optional)", "re", "logging", "pytest"],
       steps: [
         "Write detectors for email, Indian mobile numbers, PAN (5 letters, 4 digits, 1 letter) and 12-digit Aadhaar-style numbers; optionally add Presidio for names.",
@@ -257,6 +259,8 @@ export const PRACTICE: PracticeMap = {
       title: "A generated system card and a tamper-evident audit log",
       goal: "A script that builds a system card from a YAML description and eval results, plus an append-only audit log whose hash chain detects edits.",
       minutes: 60,
+
+      studio: "bank-loan-desk",
       stack: ["Python", "PyYAML", "hashlib", "Jinja2 (optional)"],
       steps: [
         "Write system.yaml for an app you built (for example the RAG app): purpose, intended users, out-of-scope uses, model and prompt version, known limits and human controls.",

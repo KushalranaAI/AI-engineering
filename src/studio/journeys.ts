@@ -26,7 +26,7 @@ export interface Journey {
   stages: Stage[];
 }
 
-const n = (id: string, kind: NodeKind, x: number, y: number, params: Partial<NodeParams> = {}): StudioNode => ({ id, kind, x, y, params: { ...KINDS[kind].defaults, ...params } });
+const n = (id: string, kind: NodeKind, x: number, y: number, params: Partial<NodeParams> = {}): StudioNode => ({ id, kind, x: Math.round(x * 1.3), y, params: { ...KINDS[kind].defaults, ...params } });
 const e = (source: string, target: string, weight?: number): StudioEdge => ({ id: `${source}->${target}`, source, target, weight });
 const Y = 160;
 
@@ -214,7 +214,7 @@ const AGENTS: Journey = {
           n("a3", "agent", 480, 340, { label: "Visa checker", tier: "small", steps: 2 }),
           n("t1", "tool", 740, 20, { label: "Flight API", latencyMs: 900, failRate: 0.06, retries: 2 }),
           n("t2", "tool", 740, 180, { label: "Hotel API", latencyMs: 700, failRate: 0.04, retries: 2 }),
-          n("w", "llm", 800, Y + 100, { label: "Write the itinerary", tier: "medium", inTokens: 4000, outTokens: 600 }),
+          n("w", "llm", 800, Y + 140, { label: "Write the itinerary", tier: "medium", inTokens: 4000, outTokens: 600 }),
           n("out", "output", 1040, Y + 100, { label: "Itinerary" }),
         ],
         edges: [e("in", "sup"), e("sup", "a1"), e("sup", "a2"), e("sup", "a3"), e("a1", "t1"), e("a2", "t2"), e("a1", "w"), e("a2", "w"), e("a3", "w"), e("w", "out")],

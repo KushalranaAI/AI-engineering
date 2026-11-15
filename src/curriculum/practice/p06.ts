@@ -550,6 +550,8 @@ export const PRACTICE: PracticeMap = {
       title: "An entity memory with extraction, merging and per-turn injection",
       goal: "A pipeline that extracts entities and facts with structured output, upserts them into a table, resolves aliases, and injects only mentioned entities into the next prompt.",
       minutes: 90,
+
+      studio: "hr-helpdesk",
       stack: ["Python", "pydantic", "SQLite", "an LLM API with structured output"],
       steps: [
         "Define the Entity and Fact schemas and the entity and entity_fact tables (key: entity_id + attribute).",
@@ -640,6 +642,8 @@ export const PRACTICE: PracticeMap = {
       title: "A consolidation job that distils episodes into evidence-backed facts",
       goal: "A nightly script that reads recent session summaries and updates a fact store with confidence, evidence ids and user-correction priority.",
       minutes: 80,
+
+      studio: "exam-tutor",
       stack: ["Python", "SQLite", "an LLM API with structured output"],
       steps: [
         "Create a facts table: statement, kind, confidence, evidence_ids, first_seen, last_confirmed, user_set.",

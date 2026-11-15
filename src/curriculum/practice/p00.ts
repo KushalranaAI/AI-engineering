@@ -192,6 +192,7 @@ export const PRACTICE: PracticeMap = {
       title: "Add a feature to your service with an agent, and catch its mistake",
       goal: "One feature added to your Level 0 service by a coding agent under a spec, a plan review, an automatic test hook, and a short log of what you corrected.",
       minutes: 90,
+      studio: "pr-review-bot",
       stack: ["Claude Code or another coding agent", "your 0.3/0.4 repo", "pytest", "ruff"],
       steps: [
         "Write a `CLAUDE.md` (or equivalent) under 40 lines: how to run, how to test, code style, and two rules the agent must not break (for example 'never edit migrations by hand').",

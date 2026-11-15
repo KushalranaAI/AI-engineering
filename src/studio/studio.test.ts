@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { JOURNEYS } from "./journeys";
 import { PRESETS, presetById } from "./presets";
 import { erlangC, percentile, queueWaitMs, simulate } from "./simulate";
 import type { StudioGraph } from "./types";
@@ -23,6 +24,36 @@ describe("queueing maths", () => {
     const xs = Array.from({ length: 100 }, (_, i) => i + 1);
     expect(percentile(xs, 50)).toBe(50);
     expect(percentile(xs, 99)).toBe(99);
+  });
+});
+
+describe("presets", () => {
+  it("are well-formed: unique ids, valid edges, one input and one output", () => {
+    const ids = PRESETS.map((p) => p.id);
+    expect(new Set(ids).size).toBe(ids.length);
+    for (const p of PRESETS) {
+      const nodeIds = p.graph.nodes.map((n) => n.id);
+      expect(new Set(nodeIds).size, `${p.id} node ids`).toBe(nodeIds.length);
+      for (const e of p.graph.edges) {
+        expect(nodeIds, `${p.id} edge source ${e.source}`).toContain(e.source);
+        expect(nodeIds, `${p.id} edge target ${e.target}`).toContain(e.target);
+      }
+      expect(p.graph.nodes.filter((n) => n.kind === "input").length, `${p.id} inputs`).toBe(1);
+      expect(p.graph.nodes.filter((n) => n.kind === "output").length, `${p.id} outputs`).toBe(1);
+      expect(p.tryThis.length, `${p.id} tryThis`).toBeGreaterThanOrEqual(3);
+    }
+  });
+
+  it("lays blocks out without overlapping (a block is about 210 x 84 px)", () => {
+    const bad: string[] = [];
+    const graphs = [...PRESETS.map((p) => ({ id: p.id, g: p.graph })), ...JOURNEYS.flatMap((j) => j.stages.map((st, i) => ({ id: `${j.id}#${i + 1}`, g: st.graph })))];
+    for (const { id, g } of graphs) {
+      const ns = g.nodes;
+      for (let i = 0; i < ns.length; i++)
+        for (let j = i + 1; j < ns.length; j++)
+          if (Math.abs(ns[i].x - ns[j].x) < 225 && Math.abs(ns[i].y - ns[j].y) < 88) bad.push(`${id}: ${ns[i].id}/${ns[j].id}`);
+    }
+    expect(bad).toEqual([]);
   });
 });
 

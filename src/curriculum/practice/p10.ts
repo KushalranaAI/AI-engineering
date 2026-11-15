@@ -433,6 +433,8 @@ export const PRACTICE: PracticeMap = {
       title: "Find your API's breaking point with Locust",
       goal: "A locustfile with realistic questions and think time that measures time to first token on a streaming endpoint, and a written capacity result from a ramp test.",
       minutes: 90,
+
+      studio: "festival-sale",
       stack: ["Python", "locust", "your streaming chat API (or a mock server)"],
       steps: [
         "Build a mock model server that streams a canned reply after a configurable delay, so you can test without spending money.",
@@ -479,6 +481,8 @@ export const PRACTICE: PracticeMap = {
       title: "Autoscale on in-flight requests and prove it with Locust",
       goal: "An HPA driven by an in-flight-requests metric (or CPU for a first pass) with tuned behaviour, shown holding latency steady during a Locust ramp.",
       minutes: 120,
+
+      studio: "festival-sale",
       stack: ["Kubernetes cluster (EKS, kind or minikube)", "metrics-server", "Prometheus and an adapter or KEDA", "Locust"],
       steps: [
         "Add an inflight_requests gauge to the API and verify it appears in Prometheus.",

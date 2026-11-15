@@ -17,6 +17,8 @@ export const PRACTICE: PracticeMap = {
       title: "An incremental ingestion script",
       goal: "A script that turns a messy folder of PDF, HTML and DOCX files into clean JSONL records and, on re-run, processes only what changed.",
       minutes: 90,
+
+      studio: "doc-ingestion",
       stack: ["Python", "pymupdf", "beautifulsoup4", "python-docx", "hashlib", "sqlite3"],
       steps: [
         "Collect 20-30 real files into ./inbox: PDFs (one scanned), saved web pages, Word documents, plus two exact duplicates and one file you will later edit.",
@@ -686,6 +688,8 @@ export const PRACTICE: PracticeMap = {
       title: "A scheduled ingestion DAG that keeps an index fresh",
       goal: "An Airflow DAG that runs nightly, re-embeds only changed documents into a vector store, deletes removed ones, retries on failure and fails loudly on a bad run.",
       minutes: 90,
+
+      studio: "doc-ingestion",
       stack: ["Python", "Apache Airflow (Docker or `pip install apache-airflow`)", "an embedding model", "pgvector or Qdrant"],
       steps: [
         "Create a folder of 30-50 markdown help articles and write a function that returns each file's id and SHA-256 hash.",

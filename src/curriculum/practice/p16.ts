@@ -204,6 +204,7 @@ kind = random.choice(["latency", "rate_limit", "token_blowup", "cache_drop", "qu
       title: "Drill: a timed 45-minute design round written against a rubric",
       goal: "A complete written design for one practice system produced in 45 minutes, scored against a 10-point rubric, then redone.",
       minutes: 120,
+      studio: "insurance-claims",
       stack: ["Excalidraw or paper", "a timer", "optionally a model playing the interviewer with a written brief"],
       steps: [
         "Pick one brief: 'Design a support assistant over 2M internal documents for 5,000 agents with p95 under 3 seconds' (or a coding assistant, research agent, or insurance document processor).",

@@ -6,6 +6,7 @@ import { useChatSource } from "../chat/store";
 import { SIMS } from "../sims/sims-list";
 import { FLOW, currentStep, dueCards, levelFraction, nextModule, projectFraction, projectStepCount, sessionsDone, streak, useProgress } from "../state/progress";
 import { moduleHref } from "../ui/CourseLayout";
+import PathGuide from "../ui/PathGuide";
 
 const STEP_LABEL = { read: "Read", relate: "Relate", build: "Build", check: "Check" } as const;
 
@@ -193,6 +194,8 @@ export function Home() {
       </section>
 
       {started ? <PathOverview /> : <Finder />}
+
+      <PathGuide current="ai" />
     </div>
   );
 }

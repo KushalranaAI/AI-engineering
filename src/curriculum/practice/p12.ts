@@ -167,6 +167,7 @@ scrape_configs:
       title: "A 1,000-concurrency load test with honest percentiles",
       goal: "An asyncio load generator plus a vllm bench serve run that ramp to at least 1,000 concurrent streams and report p50/p95/p99 TTFT, ITL and end-to-end latency with a marked knee.",
       minutes: 120,
+      studio: "festival-sale",
       stack: ["Python", "asyncio", "openai", "numpy", "vllm bench serve or genai-perf"],
       steps: [
         "Write an asyncio client that streams responses and records TTFT, every inter-token gap and end-to-end time per request, counting errors and timeouts separately.",

@@ -224,6 +224,7 @@ export const PRACTICE: PracticeMap = {
       title: "An invoice pipeline where the model does one job",
       goal: "A queued invoice-processing service where a model only extracts fields and code does validation, vendor checks and posting, with ambiguous cases routed to a review list.",
       minutes: 90,
+      studio: "upi-fraud-triage",
       stack: ["Python", "FastAPI", "pydantic", "openai (structured output)", "sqlite3"],
       steps: [
         "Expose POST /invoices that stores the uploaded text or PDF text, returns a job id immediately, and processes it in a background task.",
@@ -288,6 +289,7 @@ export const PRACTICE: PracticeMap = {
       title: "A back-of-envelope estimator, checked against a prototype",
       goal: "A reusable script that turns traffic and design choices into tokens, cost, latency and rate-limit needs for three case studies, with one estimate validated by a 20-request prototype.",
       minutes: 75,
+      studio: "hospital-triage",
       stack: ["Python", "openai or any chat API"],
       steps: [
         "Write estimate.py that takes requests per day, peak-to-average ratio, prompt tokens, retrieved tokens, output tokens, model prices and output speed, and prints daily and monthly cost, peak requests and tokens per minute, and expected generation time.",

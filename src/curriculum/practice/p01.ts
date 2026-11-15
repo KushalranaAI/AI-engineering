@@ -17,6 +17,7 @@ export const PRACTICE: PracticeMap = {
       title: "Watch next-token prediction happen with a tiny local model",
       goal: "A script that runs a small open model locally, prints the top-5 next-token probabilities at each step, and generates text one token at a time with your own loop.",
       minutes: 45,
+      sim: "llm-anatomy",
       stack: ["Python", "transformers", "torch"],
       steps: [
         "Install `transformers` and `torch` and load a small causal model such as `Qwen/Qwen2.5-0.5B` (or `gpt2` if your machine is slow).",
@@ -85,6 +86,7 @@ export const PRACTICE: PracticeMap = {
       title: "Single-head causal attention from scratch in NumPy",
       goal: "A NumPy implementation of one attention head with a causal mask, plus an MoE memory calculator, both checked against known numbers.",
       minutes: 75,
+      sim: "llm-anatomy",
       stack: ["Python", "numpy"],
       steps: [
         "Create random embeddings for a 6-token sentence (shape 6 x 16) and random weight matrices Wq, Wk, Wv (16 x 8).",

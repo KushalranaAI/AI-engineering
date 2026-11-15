@@ -179,6 +179,7 @@ export const PRACTICE: PracticeMap = {
       title: "A validated invoice extractor with page citations",
       goal: "A pipeline that detects whether each PDF page has a text layer, extracts invoice fields into a schema with page numbers, validates them, and writes low-confidence results to a review queue.",
       minutes: 120,
+      studio: "contract-review",
       stack: ["Python", "pymupdf", "pydantic", "openai or another vision API"],
       steps: [
         "Collect ten invoices: five digital PDFs and five scans or phone photos converted to PDF, including at least one multi-page invoice with a table.",
@@ -341,6 +342,7 @@ export const PRACTICE: PracticeMap = {
       title: "Critical-word error rate and a TTS normaliser",
       goal: "A transcription script that reports overall WER and a separate error rate on names and numbers, plus a TTS step that normalises tricky tokens and streams sentence by sentence.",
       minutes: 90,
+      studio: "meeting-notes",
       stack: ["Python", "faster-whisper", "jiwer", "kokoro", "soundfile"],
       steps: [
         "Record or find a three-minute Hinglish clip full of names, amounts and IDs, and hand-write the correct transcript.",
@@ -395,6 +397,7 @@ export const PRACTICE: PracticeMap = {
       title: "Endpointing and barge-in, tested offline",
       goal: "A turn-taking module driven by a VAD that you can replay against recorded audio, with tunable endpoint silence, barge-in that truncates history, and a filler for slow tools.",
       minutes: 100,
+      studio: "farmer-advisory",
       stack: ["Python", "silero-vad", "numpy", "soundfile", "sounddevice (optional, for live mic)"],
       steps: [
         "Record five test WAVs: a short question, a question with a mid-sentence 'umm' pause, two people talking, background TV noise, and a user who interrupts after two seconds of a bot reply.",

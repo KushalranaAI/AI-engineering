@@ -3,6 +3,7 @@ import ReactMarkdown from "react-markdown";
 import rehypeRaw from "rehype-raw";
 import remarkGfm from "remark-gfm";
 import { CodeBlock } from "./CodeBlock";
+import Scene from "./Scene";
 
 const text = (n: ReactNode): string => (typeof n === "string" ? n : Array.isArray(n) ? n.map(text).join("") : n && typeof n === "object" && "props" in n ? text((n as { props: { children?: ReactNode } }).props.children) : "");
 
@@ -27,6 +28,7 @@ export function Markdown({ children, className = "" }: { children: string; class
             const props = (child as { props?: { className?: string; children?: ReactNode } })?.props ?? {};
             const lang = props.className?.match(/language-([\w-]+)/)?.[1];
             const code = text(props.children).replace(/\n$/, "");
+            if (lang === "scene") return <Scene raw={code} />;
             const codeNode = node?.children?.[0] as { data?: { meta?: string } } | undefined;
             return <CodeBlock code={code} lang={lang} meta={codeNode?.data?.meta ?? undefined} />;
           },

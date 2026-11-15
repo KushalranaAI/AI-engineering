@@ -12,7 +12,19 @@ export type StudioPreset =
   | "router-cascade" // cheap model first, escalate to a strong model on low confidence
   | "guarded-agent" // input guardrail → agent with tools → output guardrail → human approval
   | "inference-serving" // gateway → router → GPU replicas with batching and a prefix cache
-  | "layered-memory"; // memory router → agent with entity, episodic, vector and procedural memory
+  | "layered-memory" // memory router → agent with entity, episodic, vector and procedural memory
+  | "bank-loan-desk" // PII guardrail → agent (customer DB, credit bureau, policy search) → critic → officer approval
+  | "hospital-triage" // guardrail → router to emergency (nurse), appointments (agent) and billing (agent + DB)
+  | "contract-review" // job queue → parallel reviewers → memo → critic → lawyer sign-off
+  | "festival-sale" // gateway rate limit → cache → retrieval → load balancer → two GPU pools under a traffic spike
+  | "doc-ingestion" // upload → job queue → parse → embed → vector store (the write side of RAG)
+  | "pr-review-bot" // pull request → parallel security, style and test-gap reviewers → comment → critic
+  | "farmer-advisory" // voice question → agent with weather API, mandi-price DB and crop manuals → local-language reply
+  | "upi-fraud-triage" // payment event → router: auto-approve most, analyst reviews the risky few
+  | "insurance-claims" // parallel damage assessor and policy checker → critic → router: auto-pay small claims, adjuster reviews large ones
+  | "hr-helpdesk" // access guardrail → agent with leave-balance DB, HR policy search and employee profile → output check
+  | "meeting-notes" // recording → transcription queue → speech-to-text → parallel summary, actions, decisions → assembled notes
+  | "exam-tutor"; // age-safe guardrail → student progress memory → cheap-first cascade → critic
 
 /** Interactive simulators a practice task can open (see src/sims) */
 export type SimId =
