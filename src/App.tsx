@@ -12,7 +12,9 @@ import { PracticePage, SimPage } from "./pages/PracticePage";
 import { ProgressPage } from "./pages/ProgressPage";
 import { ProjectPage, ProjectsPage } from "./pages/ProjectPage";
 import { SprintPage } from "./pages/SprintPage";
-import { dueCards, streak, useProgress } from "./state/progress";
+import { MODULES } from "./curriculum";
+import { currentStep, dueCards, nextModule, streak, useProgress } from "./state/progress";
+import { moduleHref } from "./ui/CourseLayout";
 import { ThemeToggle } from "./ui/bits";
 import { Credit } from "./ui/Credit";
 import { ErrorBoundary } from "./ui/ErrorBoundary";
@@ -43,6 +45,7 @@ function Nav() {
   const p = useProgress();
   const due = dueCards(p).length;
   const st = streak(p.days);
+  const next = nextModule(p);
   return (
     <header className="nav">
       <NavLink to="/" className="brand" aria-label="AI Engineer Path, home">
@@ -56,6 +59,13 @@ function Nav() {
           </NavLink>
         ))}
       </nav>
+      <kr-roadmaps
+        current="ai"
+        done={MODULES.filter((m) => p.modules[m.id]).length}
+        total={MODULES.length}
+        resume-href={next ? `#${next.projectId ? moduleHref(next) : `/learn/${next.id}/${currentStep(p, next)}`}` : undefined}
+        resume-label={next ? `Module ${next.id}: ${next.title}` : undefined}
+      />
       <span className="grow" />
       <NavLink to="/progress" className={({ isActive }) => `nav-progress${isActive ? " active" : ""}`} title="Your progress">
         <BarChart3 size={15} aria-hidden /> <span className="nav-label">{st > 0 ? `${st}-day streak` : "Progress"}</span>

@@ -6,6 +6,8 @@ design and simulate real systems, and an optional AI tutor that sees the page yo
 
 Built by **[Kushal Rana](https://kushalranaai.github.io/)**, as a companion to [System Learn](https://github.com/KushalranaAI/system_learn).
 
+Part of **[Learn in Public](https://kushalranaai.github.io/learn-in-public/)**: seven connected roadmaps from your first class to production AI systems. Every app has a **Roadmaps** button in its top bar that shows the others, and your progress in each.
+
 ## How you learn
 
 Every module is the same four steps, so you always know what to do next:

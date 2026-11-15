@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { BRAND, type BrandLinkId } from "../brand";
+import { FAMILY } from "../design/roadmaps.js";
 
 /** Small hand-drawn brand marks (lucide has no brand icons). Filled, 24x24, coloured by `currentColor`. */
 const MARKS: Record<BrandLinkId, ReactNode> = {
@@ -22,12 +23,13 @@ const MARKS: Record<BrandLinkId, ReactNode> = {
   youtube: <path fillRule="evenodd" d="M21.6 7.2a2.5 2.5 0 0 0-1.8-1.8C18.2 5 12 5 12 5s-6.2 0-7.8.4A2.5 2.5 0 0 0 2.4 7.2C2 8.8 2 12 2 12s0 3.2.4 4.8a2.5 2.5 0 0 0 1.8 1.8C5.8 19 12 19 12 19s6.2 0 7.8-.4a2.5 2.5 0 0 0 1.8-1.8C22 15.2 22 12 22 12s0-3.2-.4-4.8zM10 15V9l5.2 3L10 15z" />,
 };
 
-/** The credit strip at the bottom of every page: small, quiet, and out of the way of the content. */
+/** The credit strip at the bottom of every page: small, quiet, and out of the way of the content. It names the family too. */
 export function Credit() {
   return (
     <footer className="credit">
       <span className="credit-text">
-        Built by <a href={BRAND.links[0].href} target="_blank" rel="noopener noreferrer">{BRAND.name}</a>
+        <span className="credit-wide">Built by </span><a href={BRAND.links[0].href} target="_blank" rel="noopener noreferrer">{BRAND.name}</a>
+        {" · "}<span className="credit-wide">Part of </span><a href={FAMILY.hub} title={`${FAMILY.name}: every roadmap by ${FAMILY.author}`}>{FAMILY.name}</a>
       </span>
       <nav className="credit-links" aria-label={`${BRAND.name} on the web`}>
         {BRAND.links.map((l) => (

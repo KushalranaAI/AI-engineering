@@ -558,3 +558,5 @@ details.privacy summary, .more summary { cursor: pointer; color: var(--muted); }
 .pathguide-card .btn { align-self: flex-start; margin-top: auto; }
 .pathguide-num { display: grid; place-items: center; width: 26px; height: 26px; border-radius: 50%; background: var(--panel-3); color: var(--accent-strong); font-weight: 650; font-size: 0.8rem; }
 .pathguide-here { align-self: flex-start; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--accent-strong); }
+.pathguide-family { margin: 16px 0 0; max-width: 760px; line-height: 1.55; }
+.pathguide-family a { font-weight: 600; }
